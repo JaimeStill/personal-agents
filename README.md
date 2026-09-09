@@ -1,0 +1,66 @@
+# Personal agents
+
+This repository documents running a self-hosted LLM on one machine and driving it with the
+[Pi agent harness](https://github.com/earendil-works/pi-mono) from another, over a private
+[Tailscale](https://tailscale.com) network. It targets [Omarchy](https://omarchy.org) as
+the distro on both machines; steps specific to Omarchy are called out where they occur
+rather than assumed silently.
+
+## Host and remote
+
+Two roles recur throughout these docs:
+
+- The **host** is the machine that serves models. It runs a llama.cpp router as a
+  standing service and does the actual inference. It's expected to be a stationary
+  machine with a capable GPU or a large-unified-memory APU.
+- The **remote** is the machine you work from. It runs `pi` and connects to the host
+  over Tailscale. It does no local inference.
+
+A single physical pair fills these roles today (see [Preparation](#1-preparation) below),
+but the `setup/` guides are written in host/remote terms throughout, not tied to specific
+hardware, so the same steps apply if either role moves to different machines later.
+
+## Setup sequence
+
+### 1. Preparation
+
+Before touching `setup/`, check whether your hardware needs preliminary, device-specific
+work under `preparation/`. Only devices that actually require something beyond the
+general `setup/` steps get a file here — most remotes, for instance, don't. A second unit
+of an already-documented device still gets its own file rather than reusing one, even with
+identical silicon, so whatever actually differs between two nominally identical machines
+(firmware revision, BIOS defaults, anything else that turns up) gets caught rather than
+silently assumed away.
+
+- [`preparation/framework-desktop.md`](preparation/framework-desktop.md) — the Framework
+  Desktop acting as host today.
+
+If your hardware isn't listed and needs something device-specific the general docs don't
+cover, write it down here, following the pattern of the existing file, once you've worked
+it out.
+
+### 2. Setup
+
+With preparation settled, follow `setup/` in order:
+
+1. [Hosting setup](setup/hosting-setup.md) — installing and running the llama.cpp router
+   on the host, as a systemd service, with model storage and acquisition.
+2. [Networking](setup/networking.md) — Tailscale prerequisites, exposing the host on the
+   tailnet, and enabling remote terminal access.
+3. [The Pi agent harness](setup/pi-harness.md) — installing `pi` on the remote and
+   connecting it to the host's router.
+4. [Remote administration](setup/remote-admin.md) — managing the host from the remote:
+   terminal sessions, file transfer, updates, and restart recovery.
+
+Each doc links to the next and previous in this order.
+
+## Reference
+
+[`models/`](models/README.md) isn't a setup step — it's a standing reference for picking
+a model against a given host's memory budget, and the specification for how per-model
+configuration actually gets applied ([`models/config.md`](models/config.md)). Revisit it
+whenever the picture changes: new hardware, more memory, or just checking whether a
+better model has since emerged. Each device with a running router keeps its concrete
+configuration under `models/<device>/` (e.g.
+[`models/framework-desktop/`](models/framework-desktop/)) — the preset file actually in
+use, and the scripts that apply and restart it.
