@@ -1,0 +1,32 @@
+#!/bin/bash
+# Lists the router's registered models (GET /models), or loads/unloads one
+# (POST /models/load, /models/unload). Confirmed against
+# https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md -
+# neither --help nor the binary's own strings document these two.
+set -euo pipefail
+
+host="http://$(tailscale ip -4):8080"
+action="${1:-list}"
+
+case "$action" in
+  list)
+    curl -s "$host/models" | jq -r '
+      ["MODEL", "STATUS", "CONTEXT"],
+      (.data[] | [.id, .status.value, (.meta.n_ctx // "-" | tostring)])
+      | @tsv' | column -t -s $'\t'
+    ;;
+  load|unload)
+    if [ "$#" -ne 2 ]; then
+      echo "usage: outpost server models $action <model-id>" >&2
+      exit 1
+    fi
+    curl -s -X POST "$host/models/$action" \
+      -H 'Content-Type: application/json' \
+      -d "$(jq -n --arg model "$2" '{model: $model}')" \
+      | jq .
+    ;;
+  *)
+    echo "usage: outpost server models [load|unload <model-id>]" >&2
+    exit 1
+    ;;
+esac
