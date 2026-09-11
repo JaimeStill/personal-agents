@@ -1,0 +1,28 @@
+#!/bin/bash
+# Symlinks profiles/<tier>.ini into the location the llama-router systemd
+# unit reads it from. Re-run any time after pulling changes to this repo, or
+# to switch which profile a host uses; safe to run repeatedly.
+set -euo pipefail
+
+if [ "$#" -ne 1 ]; then
+  echo "usage: outpost-preset-install <tier>" >&2
+  echo "  <tier> names a file under profiles/, e.g. 'unified-96gb' for profiles/unified-96gb.ini" >&2
+  exit 1
+fi
+
+tier="$1"
+self="$(readlink -f -- "${BASH_SOURCE[0]}")"
+repo_dir="$(cd -- "$(dirname -- "$self")/../.." && pwd)"
+profile="$repo_dir/profiles/$tier.ini"
+target_dir="/etc/llama-router"
+
+if [ ! -f "$profile" ]; then
+  echo "outpost-preset-install: no such profile: $profile" >&2
+  exit 1
+fi
+
+sudo mkdir -p "$target_dir"
+sudo ln -sfn "$profile" "$target_dir/models.ini"
+
+echo "Linked $profile -> $target_dir/models.ini"
+echo "Run 'outpost service restart' to apply the change."
