@@ -56,9 +56,9 @@ a set of instantiated copies, not a source of truth in itself:
   copied section should note which recipe it came from, so a future change to the recipe
   has an obvious set of places to re-propagate to.
 - [`../admin/`](../admin/) holds the tooling, dispatched through `outpost` (`outpost
-  preset install <tier>`, `outpost service restart`) or called directly — see
-  [`../admin/README.md`](../admin/README.md) for the commands and `../admin/install.sh`
-  to put them on your `PATH`.
+  preset install <tier>`, `outpost service restart`, `outpost service status`) or called
+  directly — see [`../admin/README.md`](../admin/README.md) for the commands and
+  `../admin/install.sh` to put them on your `PATH`.
 
 This is a manual-propagation convention, not an enforced one — proportionate to a
 personal, occasionally-updated setup. It stops being proportionate if this ever grows into

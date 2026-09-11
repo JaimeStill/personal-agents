@@ -21,6 +21,8 @@ the same way:
   is and how profiles are organized.
 - `outpost service restart` (`outpost-service-restart`) — restarts `llama-router.service`
   and shows its status.
+- `outpost service status` (`outpost-service-status`) — shows the service's systemd status
+  and a `/health` check, without restarting anything. No `sudo` needed.
 
 ## Adding a command
 

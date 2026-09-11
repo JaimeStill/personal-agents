@@ -6,4 +6,9 @@
 set -euo pipefail
 
 sudo systemctl restart llama-router
+
+# `systemctl restart` returns as soon as the process forks — without a brief
+# pause, the status below can catch the ExecStart wrapper (bash) before it
+# execs into llama-server, showing a misleading Main PID.
+sleep 1
 sudo systemctl status llama-router --no-pager

@@ -1,0 +1,13 @@
+#!/bin/bash
+# Shows llama-router's systemd status and a quick /health check. No sudo
+# needed — systemctl status is readable without it.
+set -euo pipefail
+
+systemctl status llama-router --no-pager
+echo
+
+# The router binds the tailnet interface specifically, not 0.0.0.0 or
+# 127.0.0.1 (see setup/hosting-setup.md) — 127.0.0.1 never answers.
+echo -n "health: "
+curl -s "http://$(tailscale ip -4):8080/health"
+echo
