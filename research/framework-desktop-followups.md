@@ -217,8 +217,8 @@ components this use case has no need for.
 
 **Verdict:** hold off on Prometheus/Grafana until there's an actual need to watch trends
 rather than spot-check a number; rule out a full LGTM stack outright unless logs or traces
-from something else are actually being collected later. `outpost server metrics` (queued —
-`context/roadmap.toml` goal `outpost-toolkit`) is the nearer-term consumer.
+from something else are actually being collected later. `outpost server metrics` now wraps
+the spot-check (`admin/README.md`).
 
 ### Gateway/proxy, browser chat UI, RAG
 

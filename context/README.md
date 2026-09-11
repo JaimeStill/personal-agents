@@ -13,6 +13,8 @@ steps.
 - **Networking** — done. [`setup/networking.md`](../setup/networking.md).
 - **Pi harness** — done. [`setup/pi-harness.md`](../setup/pi-harness.md).
 - **Remote administration** — done. [`setup/remote-admin.md`](../setup/remote-admin.md).
+- **Admin tooling (`outpost`)** — done. Profile install and service management, the
+  router's HTTP API (models, metrics), and GPU usage. [`admin/`](../admin/).
 - **Model selection** — done, standing reference. [`reference/`](../reference/).
 - **Repository layout** — done. `reference/`, `admin/`, and `profiles/` separate
   host-agnostic reference content, admin tooling, and per-capability-tier config;
