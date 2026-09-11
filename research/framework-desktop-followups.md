@@ -39,31 +39,39 @@ flag's help text says the shared pool is sized to `n_parallel × N` only when th
 itself drives the size. Here, `-c 32768` is what's set, so the pool is sized to `-c` (32768)
 total, split dynamically across whichever slots are active, not multiplied by 4.
 
-This is corroborated, loosely, by the observed RSS: 41.4G for a Q4_K_M gpt-oss-120b
-instance. A 32768-token KV cache at this model's architecture (36 layers, 8 KV heads,
-head_dim 64, with roughly half the layers using a 128-token sliding window rather than full
-attention) comes to on the order of 1-2GB, which fits comfortably inside 41.4G alongside the
-weights. A naive 4× multiplication would only add a few more GB and wouldn't be
-distinguishable from RSS alone, so this doesn't prove the reading, but it doesn't contradict
-it either. **Confidence: medium-high**, resting on the documentation's wording rather than a
-direct before/after memory measurement. A clean test — set `-np 1` explicitly, restart,
-diff `/slots` and RSS — would make this certain instead of inferred.
+**Confirmed** (2026-09-11): the `ps`/`free`-style "41.4G RSS" figure understates the real
+footprint on this hardware, and was the wrong tool for the comparison — this host's unified
+GPU memory (Strix Halo, GTT-backed) doesn't show up as ordinary process RSS at all. The same
+gpt-oss-120b process that reports well under 200MB of `ps` RSS shows, via `amdgpu_top -p`,
+60.8G requested / 61.2G resident GTT. That's the number that actually tracks weights + KV
+cache on this host, and it's the one this test compares before and after.
 
-Practical upshot: running 4 auto-picked slots while `pi` only ever drives one sequential
-conversation is very likely not costing extra context or memory today, because of
-kv-unified — but it isn't proven, and pinning `-np 1` explicitly would make the intended
-behavior explicit instead of relying on an auto-picked default.
+With `-np` left at auto (`total_slots: 4`), `amdgpu_top -p` reported `GTT 61207 MiB` for the
+gpt-oss-120b process. Restarted with `-np 1` (`total_slots: 1`, confirmed via `/slots`), the
+same reading was `GTT 61195 MiB` — a 12 MiB difference, noise against a 61G footprint. The
+kv-unified reading is confirmed directly: the shared KV pool is sized to `-c` (32768) total,
+not `-c × slots`, and slot count has no meaningful memory cost on this host.
+
+Practical upshot, revised from the original framing: because 4 auto-picked slots cost
+nothing extra, there's no case for pinning `-np 1` here — doing so would only give up the
+ability to run a second concurrent `pi` session later, for zero memory savings. `-np` stays
+at auto in `profiles/unified-96gb.ini`; the test above was run against a scratch copy of the
+profile, never committed.
 
 ### Why pi's session shows ~30k against a configured 32768
 
 `pi`'s own README and docs don't mention a token-accounting breakdown, a context-usage
 display, or a slash command for either. `~/.pi/agent/settings.json` on this host is minimal
-(`{"theme": "omarchy-system"}`) and has nothing context-related. The likely explanation —
-fixed overhead from `pi`'s system prompt and tool-call schemas eating into the 32768 window
-before conversation even starts — remains a hypothesis, not a confirmed fact. Confirming it
-needs either a source-level look at `pi-mono` or an empirical test: start a fresh `pi`
-session against this router, send one trivial message, and read `n_prompt_tokens` off
-`/slots` immediately. That number is the fixed overhead, directly.
+(`{"theme": "omarchy-system"}`) and has nothing context-related.
+
+**Confirmed** (2026-09-11): the fixed-overhead hypothesis was wrong, and the real number is
+much smaller than the ~30k figure suggested. A fresh `pi` session (default skills and
+context files, no prior conversation) sent one trivial message ("Say hi in one word.")
+against gpt-oss-120b; `/slots` immediately after read `n_prompt_tokens: 1723` — corroborated
+by `/metrics`' `n_tokens_max: 1723`. That's about 5% of the configured 32768, not the ~30k
+this section set out to explain. The ~30k a real session shows is conversation content
+accumulating over many turns — tool output, edits, back-and-forth — not fixed system-prompt
+or tool-schema overhead. Whatever eats context in a long-running session, it isn't this.
 
 ### Model architecture changes the real cost of context, meaningfully
 
@@ -264,6 +272,11 @@ context follow-up above; hold off on Prometheus/Grafana until there's an actual 
 watch trends rather than spot-check a number; rule out a full LGTM stack outright unless
 logs or traces from something else are actually being collected later.
 
+**Done** (2026-09-11): `metrics = true` is on in `profiles/unified-96gb.ini`'s `[*]`
+section. `/metrics?model=...` now returns Prometheus output for every loaded model instead
+of the `501 not_supported_error` seen before this change — used directly for both
+measurements above.
+
 ### Gateway/proxy, browser chat UI, RAG
 
 These three don't have an active case today — see
@@ -276,15 +289,16 @@ investigation.
 
 Roughly in order — each step's result should inform whether the next one is worth doing:
 
-1. **Turn on `--metrics`** in `[*]` in `models.ini` and restart. Cheapest change, unlocks
-   real numbers (`n_tokens_max`, `requests_deferred`) for everything below instead of
-   inference from RSS and `/slots` alone.
-2. **Set `-np 1` explicitly**, restart, and diff `/slots` (should show a single slot) and
-   RSS against today's 41.4G baseline for gpt-oss-120b. This directly confirms or refutes
-   the kv-unified sizing read above, rather than leaving it inferred.
-3. **Send one trivial message in a fresh `pi` session** and read `n_prompt_tokens` off
-   `/slots` (or `n_tokens_max` from `/metrics`, once on) immediately after — quantifies the
-   fixed system-prompt/tool-schema overhead behind the ~30k-versus-32768 gap.
+1. **Done** (2026-09-11) — turned on `--metrics` in `[*]` in `profiles/unified-96gb.ini` and
+   restarted. See "Observability" above.
+2. **Done** (2026-09-11) — tested `-np 1` transiently (not persisted) and diffed GPU memory
+   (`amdgpu_top -p`, not `ps` RSS — see "Slot count and KV-unified" above) against auto:
+   4 slots and 1 slot both hold at ~61.2G. Confirms the kv-unified sizing read; `-np` stays
+   at auto in the checked-in profile.
+3. **Done** (2026-09-11) — sent one trivial message in a fresh `pi` session and read
+   `n_prompt_tokens: 1723` off `/slots`, cross-checked against `/metrics`' `n_tokens_max`.
+   See "Why pi's session shows ~30k" above — the fixed overhead is much smaller than that
+   figure suggested; the ~30k comes from conversation accumulation, not fixed overhead.
 4. **Add a `[unsloth/Qwen3-Coder-Next-GGUF:Q5_K_M]` section** to `models.ini` with a larger
    `c` than gpt-oss-120b's, and confirm via `/props`/`/slots` that it loads and holds the
    larger window without a proportional memory jump — validates the architecture-driven
