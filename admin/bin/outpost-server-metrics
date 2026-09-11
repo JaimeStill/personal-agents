@@ -1,0 +1,37 @@
+#!/bin/bash
+# Formats GET /metrics?model=<id> (Prometheus exposition) into a compact
+# summary. The model id is mandatory - a request without ?model= 400s, and
+# there's no auto-detection even when only one model is loaded (deliberate:
+# see context/reset.md). Run `outpost server models` to find an id.
+set -euo pipefail
+
+if [ "$#" -ne 1 ]; then
+  echo "usage: outpost server metrics <model-id>" >&2
+  echo "run 'outpost server models' to list ids" >&2
+  exit 1
+fi
+
+model="$1"
+host="http://$(tailscale ip -4):8080"
+metrics="$(curl -s -G "$host/metrics" --data-urlencode "model=$model")"
+
+if ! echo "$metrics" | grep -q '^llamacpp:'; then
+  echo "$metrics" >&2
+  exit 1
+fi
+
+value() {
+  echo "$metrics" | awk -v key="$1" '$1 == key { print $2 }'
+}
+
+cat <<EOF
+model:                 $model
+prompt tokens:         $(value llamacpp:prompt_tokens_total)
+prompt tokens cached:  $(value llamacpp:prompt_tokens_cached_total)
+prompt throughput:     $(value llamacpp:prompt_tokens_seconds) tok/s
+generated tokens:      $(value llamacpp:tokens_predicted_total)
+generation throughput: $(value llamacpp:predicted_tokens_seconds) tok/s
+requests processing:   $(value llamacpp:requests_processing)
+requests deferred:     $(value llamacpp:requests_deferred)
+n_tokens_max:          $(value llamacpp:n_tokens_max)
+EOF
