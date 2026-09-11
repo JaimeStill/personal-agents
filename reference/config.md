@@ -63,3 +63,32 @@ a set of instantiated copies, not a source of truth in itself:
 This is a manual-propagation convention, not an enforced one — proportionate to a
 personal, occasionally-updated setup. It stops being proportionate if this ever grows into
 managing many hosts or many concurrently-used models; revisit then, not preemptively.
+
+## Observability: `--metrics`
+
+`metrics = true` in `[*]` turns on a Prometheus-format `/metrics` endpoint per loaded model.
+In router mode it needs a `?model={id}` query parameter — a request without one returns
+`400`. It exposes token throughput (`llamacpp:prompt_tokens_total`,
+`llamacpp:tokens_predicted_total`), request/slot pressure
+(`llamacpp:requests_processing`, `llamacpp:requests_deferred`,
+`llamacpp:n_busy_slots_per_decode`), and `llamacpp:n_tokens_max` — the largest observed
+sequence length, the direct answer to "how much context did a real session actually use."
+Confirmed live 2026-09-11 against `profiles/unified-96gb.ini`.
+
+Spot-check it with `curl` today; `outpost server metrics` (`context/roadmap.toml` goal
+`outpost-toolkit`) will wrap this once built.
+
+## Memory footprint: measure with `amdgpu_top`, not RSS
+
+On unified-memory hardware (a Strix Halo APU, GTT-backed), the GPU memory `llama-server`
+holds is invisible to `ps`/`free`-style process RSS — a loaded gpt-oss-120b instance showed
+under 200MB of `ps` RSS while actually holding roughly 61GB. Use `amdgpu_top -p` for the
+real per-process figure (`VRAM` + `GTT`).
+
+That real figure also confirms `--kv-unified`'s sizing behavior directly: gpt-oss-120b at
+`c = 32768` held ~61.2G identically at `total_slots: 4` (`-np` left at its auto default) and
+`total_slots: 1` (`-np 1`, tested transiently against a scratch copy of the profile, never
+committed) — a 12MB difference, noise against a 61G footprint. The shared KV pool is sized
+to `-c` total, not `-c × slots`; slot count carries no meaningful memory cost on this
+hardware. `-np` stays at auto in `profiles/*.ini` for this reason — pinning it would trade
+away the ability to run a second concurrent `pi` session for no memory savings.
