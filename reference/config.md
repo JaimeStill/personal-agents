@@ -55,8 +55,7 @@ a set of instantiated copies, not a source of truth in itself:
   capability class reuses the same file instead of getting its own copy. A comment above a
   copied section should note which recipe it came from, so a future change to the recipe
   has an obvious set of places to re-propagate to.
-- [`../admin/`](../admin/) holds the tooling, dispatched through `outpost` (`outpost
-  preset install <tier>`, `outpost service restart`, `outpost service status`) or called
+- [`../admin/`](../admin/) holds the tooling, dispatched through `outpost` or called
   directly — see [`../admin/README.md`](../admin/README.md) for the commands and
   `../admin/install.sh` to put them on your `PATH`.
 
@@ -75,15 +74,15 @@ In router mode it needs a `?model={id}` query parameter — a request without on
 sequence length, the direct answer to "how much context did a real session actually use."
 Confirmed live 2026-09-11 against `profiles/unified-96gb.ini`.
 
-Spot-check it with `curl` today; `outpost server metrics` (`context/roadmap.toml` goal
-`outpost-toolkit`) will wrap this once built.
+`outpost server metrics <model-id>` wraps this with a formatted summary; spot-check with
+`curl` directly for the raw exposition.
 
 ## Memory footprint: measure with `amdgpu_top`, not RSS
 
 On unified-memory hardware (a Strix Halo APU, GTT-backed), the GPU memory `llama-server`
 holds is invisible to `ps`/`free`-style process RSS — a loaded gpt-oss-120b instance showed
 under 200MB of `ps` RSS while actually holding roughly 61GB. Use `amdgpu_top -p` for the
-real per-process figure (`VRAM` + `GTT`).
+real per-process figure (`VRAM` + `GTT`) — `outpost amd usage` wraps it.
 
 That real figure also confirms `--kv-unified`'s sizing behavior directly: gpt-oss-120b at
 `c = 32768` held ~61.2G identically at `total_slots: 4` (`-np` left at its auto default) and

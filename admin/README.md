@@ -1,9 +1,8 @@
 # outpost
 
-Administration tooling for this repository's `llama-router` setup — applying a profile and
-restarting the service today, and wherever this grows next (diagnostics, metadata capture —
-see [`../context/roadmap.toml`](../context/roadmap.toml)'s `tuning` goal for what's already
-planned there).
+Administration tooling for this repository's `llama-router` setup: applying a profile and
+managing the systemd service, querying the router's HTTP API, and reading the host's GPU
+usage — see [`../context/roadmap.toml`](../context/roadmap.toml) for what's planned next.
 
 ## The name
 
@@ -23,6 +22,18 @@ the same way:
   and shows its status.
 - `outpost service status` (`outpost-service-status`) — shows the service's systemd status
   and a `/health` check, without restarting anything. No `sudo` needed.
+- `outpost server models` (`outpost-server-models`) — lists the router's registered models
+  with status and context size (`GET /models`). `outpost server models load <model-id>` /
+  `models unload <model-id>` load or unload one (`POST /models/load` / `/models/unload`).
+- `outpost server metrics <model-id>` (`outpost-server-metrics`) — a formatted read of
+  `GET /metrics?model=<id>`: prompt/generation throughput, request/slot pressure, and
+  `n_tokens_max`. The model id is mandatory; run `outpost server models` to find one. See
+  [`../reference/config.md`](../reference/config.md)'s "Observability" section for what the
+  endpoint exposes.
+- `outpost amd usage` (`outpost-amd-usage`) — per-process VRAM/GTT via `amdgpu_top -p`, the
+  way to see what `llama-server` actually holds on unified-memory hardware, where
+  `ps`/`free`-style RSS reads far too low. See
+  [`../reference/config.md`](../reference/config.md)'s "Memory footprint" section.
 
 ## Adding a command
 
