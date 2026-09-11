@@ -23,9 +23,9 @@ default.
 
 > **Note:** which backend to install was decided during your host's machine setup under
 > `preparation/`; this doc assumes that's already done. For which model fits the
-> host's memory, see [`../models/README.md`](../models/README.md) — the machine setup doc
-> records the specific pick made, but that reference is where the reasoning behind it
-> lives.
+> host's memory, see [`../reference/README.md`](../reference/README.md) — the machine
+> setup doc records the specific pick made, but that reference is where the reasoning
+> behind it lives.
 
 ## Install
 
@@ -151,12 +151,12 @@ llama-server \
 ## Per-model configuration
 
 `--models-preset` points at an INI file separating defaults every model gets from
-overrides a specific model needs — see [`../models/config.md`](../models/config.md) for
-the full specification, and [`../models/README.md`](../models/README.md) for which models
-need what. Source-control the preset file alongside everything else in this repository,
-so changes are diffable and reversible; [`../models/framework-desktop/`](../models/framework-desktop/)
-is a working example, including the small scripts that symlink it into place and restart
-the service afterward.
+overrides a specific model needs — see [`../reference/config.md`](../reference/config.md)
+for the full specification, and [`../reference/README.md`](../reference/README.md) for
+which models need what. Source-control the preset file alongside everything else in this
+repository, so changes are diffable and reversible; [`../profiles/`](../profiles/) holds
+the concrete files and [`../admin/`](../admin/README.md) the tooling that symlinks one
+into place and restarts the service afterward.
 
 ## Run it as a service
 

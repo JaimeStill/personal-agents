@@ -56,17 +56,19 @@ Each doc links to the next and previous in this order.
 
 ## Reference
 
-[`models/`](models/README.md) isn't a setup step — it's a standing reference for picking
-a model against a given host's memory budget, and the specification for how per-model
-configuration actually gets applied ([`models/config.md`](models/config.md)). Revisit it
-whenever the picture changes: new hardware, more memory, or just checking whether a
-better model has since emerged. Each device with a running router keeps its concrete
-configuration under `models/<device>/` (e.g.
-[`models/framework-desktop/`](models/framework-desktop/)) — the preset file actually in
-use, and the scripts that apply and restart it.
+[`reference/`](reference/README.md) isn't a setup step — it's a standing reference for
+picking a model against a given host's memory budget, and the specification for how
+per-model configuration actually gets applied ([`reference/config.md`](reference/config.md)).
+Revisit it whenever the picture changes: new hardware, more memory, or just checking
+whether a better model has since emerged. Each host's concrete configuration lives under
+[`profiles/`](profiles/) as `<tier>.ini`, keyed by hardware capability tier rather than
+device (e.g. [`profiles/unified-96gb.ini`](profiles/unified-96gb.ini) — see
+`reference/config.md` for what a tier is), so hosts in the same capability class share a
+file. [`admin/`](admin/README.md) is the tooling that applies and restarts it (`outpost
+preset install <tier>`, `outpost service restart`).
 
 [`capabilities/`](capabilities/README.md) is a similar standing reference, one file per
 capability considered but not yet added on top of the running setup (a gateway/proxy, RAG,
 a browser chat UI) — what it would take, and what would make it worth doing.
 [`research/`](research/) holds the dated investigations (host state, live measurements,
-options considered) that back both `models/` and `capabilities/`'s current calls.
+options considered) that back both `reference/` and `capabilities/`'s current calls.

@@ -27,7 +27,7 @@ turned on.
 
 ### Slot count and KV-unified: `c` is the shared budget, not `c × slots`
 
-The router leaves `-np`/`--parallel` at its default (`-1`, auto) — `models/framework-desktop/models.ini`
+The router leaves `-np`/`--parallel` at its default (`-1`, auto) — `profiles/unified-96gb.ini`
 never sets it — and `--kv-unified`'s own `--help` text defaults it to enabled "if number of
 slots is auto," which this is. With `-np` auto, `llama-server` picked `total_slots: 4` for
 the loaded gpt-oss-120b instance (confirmed live via `curl http://127.0.0.1:51249/slots`).
@@ -88,8 +88,8 @@ linear-per-layer for three-quarters of the network). An exact head_dim for Qwen3
 gated-attention layers wasn't pinned down, so treat the direction and rough magnitude as
 confirmed, the exact ratio as not computed.
 
-This argues directly for per-model handling in `models/framework-desktop/models.ini` rather
-than one shared `[*] c = 32768` (mechanism per `models/config.md`): gpt-oss-120b is the one
+This argues directly for per-model handling in `profiles/unified-96gb.ini` rather
+than one shared `[*] c = 32768` (mechanism per `reference/config.md`): gpt-oss-120b is the one
 that actually needs care around context size and slot count; Qwen3-Coder-Next likely has
 real headroom to run a substantially larger `c` at little extra memory cost, which the
 current shared setting leaves on the table.

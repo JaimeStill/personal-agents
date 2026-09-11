@@ -13,10 +13,10 @@ steps.
 - **Networking** — done. [`setup/networking.md`](../setup/networking.md).
 - **Pi harness** — done. [`setup/pi-harness.md`](../setup/pi-harness.md).
 - **Remote administration** — done. [`setup/remote-admin.md`](../setup/remote-admin.md).
-- **Model selection** — done, standing reference. [`models/`](../models/).
-- **Repository layout** (`models/` as host-agnostic reference + administration tooling) —
-  in progress, first in sequence. [`roadmap.toml`](roadmap.toml) goal `models-layout`,
-  concept in [`context/concepts/models-tooling.md`](concepts/models-tooling.md).
+- **Model selection** — done, standing reference. [`reference/`](../reference/).
+- **Repository layout** — done. `reference/`, `admin/`, and `profiles/` separate
+  host-agnostic reference content, admin tooling, and per-capability-tier config;
+  `models/` is retired. [`roadmap.toml`](roadmap.toml) goal `models-layout`.
 - **Context, update, and observability tuning** — in progress, follows the layout goal.
   [`roadmap.toml`](roadmap.toml) goal `tuning`, findings in
   [`research/framework-desktop-followups.md`](../research/framework-desktop-followups.md).

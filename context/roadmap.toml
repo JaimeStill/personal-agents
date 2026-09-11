@@ -38,7 +38,7 @@ proof = "A forced `sudo pacman -S llama-cpp` reinstall triggers a `systemctl res
 
 [goals.tuning.tasks.qwen-context-budget]
 name = "Give Qwen3-Coder-Next its own, larger context budget"
-summary = "Add a [unsloth/Qwen3-Coder-Next-GGUF:Q5_K_M] section to models/framework-desktop/models.ini with a larger c than gpt-oss-120b's, and confirm it loads and holds the larger window without a proportional memory jump."
+summary = "Add a [unsloth/Qwen3-Coder-Next-GGUF:Q5_K_M] section to profiles/unified-96gb.ini with a larger c than gpt-oss-120b's, and confirm it loads and holds the larger window without a proportional memory jump."
 proof = "/props and /slots show the larger n_ctx for the Qwen3-Coder-Next instance; RSS growth is well short of proportional to the c increase."
 
 [goals.tuning.tasks.cache-reuse-tuning]
