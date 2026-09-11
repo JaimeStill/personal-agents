@@ -14,69 +14,25 @@ time of writing.
 The router (`llama-router.service`) runs `llama-server --models-dir /home/jaime/models
 --no-models-autoload --host 100.87.194.83 --port 8080 --models-preset
 /etc/llama-router/models.ini`, per `setup/hosting-setup.md`. At the time of this
-investigation it had `unsloth/gpt-oss-120b-GGUF:Q4_K_M` loaded (not Qwen3-Coder), using
-about 41.4G RSS. `/mnt/models` (the dedicated drive) has 758G free of 916G. System RAM is
-125Gi total; with that one model loaded, only about 4.1Gi was reported free (about 51Gi
-"available," counting reclaimable page cache). No caching, observability, proxy, or
-vector-store packages were installed (`redis`, `prometheus`, `grafana`, `litellm`,
-`openwebui`, `qdrant`, and `chroma` all absent from `pacman -Q`), and the loaded model's
-`/props` response showed `endpoint_metrics: false` — `--metrics` exists as a flag but isn't
-turned on.
+investigation it had `unsloth/gpt-oss-120b-GGUF:Q4_K_M` loaded (not Qwen3-Coder); see
+[`../reference/config.md`](../reference/config.md) for its real memory footprint and why
+`ps`/`free`-style RSS reads far too low on this hardware. `/mnt/models` (the dedicated
+drive) has 758G free of 916G. System RAM is 125Gi total; with that one model loaded, only
+about 4.1Gi was reported free (about 51Gi "available," counting reclaimable page cache). No
+caching, observability, proxy, or vector-store packages were installed (`redis`,
+`prometheus`, `grafana`, `litellm`, `openwebui`, `qdrant`, and `chroma` all absent from
+`pacman -Q`).
 
 ## Context and session optimization
 
-### Slot count and KV-unified: `c` is the shared budget, not `c × slots`
-
-The router leaves `-np`/`--parallel` at its default (`-1`, auto) — `profiles/unified-96gb.ini`
-never sets it — and `--kv-unified`'s own `--help` text defaults it to enabled "if number of
-slots is auto," which this is. With `-np` auto, `llama-server` picked `total_slots: 4` for
-the loaded gpt-oss-120b instance (confirmed live via `curl http://127.0.0.1:51249/slots`).
-Each of the 4 slots reports `n_ctx: 32768`, which looks at first glance like a
-131072-token reservation, but that number is each slot's addressable window into one shared
-pool, not a per-slot allocation. llama.cpp's own docs describe `--kv-unified` as "a single
-unified KV buffer shared across all sequences," and the related `--kv-unified-per-slot`
-flag's help text says the shared pool is sized to `n_parallel × N` only when that flag
-itself drives the size. Here, `-c 32768` is what's set, so the pool is sized to `-c` (32768)
-total, split dynamically across whichever slots are active, not multiplied by 4.
-
-**Confirmed** (2026-09-11): the `ps`/`free`-style "41.4G RSS" figure understates the real
-footprint on this hardware, and was the wrong tool for the comparison — this host's unified
-GPU memory (Strix Halo, GTT-backed) doesn't show up as ordinary process RSS at all. The same
-gpt-oss-120b process that reports well under 200MB of `ps` RSS shows, via `amdgpu_top -p`,
-60.8G requested / 61.2G resident GTT. That's the number that actually tracks weights + KV
-cache on this host, and it's the one this test compares before and after.
-
-With `-np` left at auto (`total_slots: 4`), `amdgpu_top -p` reported `GTT 61207 MiB` for the
-gpt-oss-120b process. Restarted with `-np 1` (`total_slots: 1`, confirmed via `/slots`), the
-same reading was `GTT 61195 MiB` — a 12 MiB difference, noise against a 61G footprint. The
-kv-unified reading is confirmed directly: the shared KV pool is sized to `-c` (32768) total,
-not `-c × slots`, and slot count has no meaningful memory cost on this host.
-
-Practical upshot, revised from the original framing: because 4 auto-picked slots cost
-nothing extra, there's no case for pinning `-np 1` here — doing so would only give up the
-ability to run a second concurrent `pi` session later, for zero memory savings. `-np` stays
-at auto in `profiles/unified-96gb.ini`; the test above was run against a scratch copy of the
-profile, never committed.
-
-### Why pi's session shows ~30k against a configured 32768
-
-`pi`'s own README and docs don't mention a token-accounting breakdown, a context-usage
-display, or a slash command for either. `~/.pi/agent/settings.json` on this host is minimal
-(`{"theme": "omarchy-system"}`) and has nothing context-related.
-
-**Confirmed** (2026-09-11): the fixed-overhead hypothesis was wrong, and the real number is
-much smaller than the ~30k figure suggested. A fresh `pi` session (default skills and
-context files, no prior conversation) sent one trivial message ("Say hi in one word.")
-against gpt-oss-120b; `/slots` immediately after read `n_prompt_tokens: 1723` — corroborated
-by `/metrics`' `n_tokens_max: 1723`. That's about 5% of the configured 32768, not the ~30k
-this section set out to explain. The ~30k a real session shows is conversation content
-accumulating over many turns — tool output, edits, back-and-forth — not fixed system-prompt
-or tool-schema overhead. Whatever eats context in a long-running session, it isn't this.
+`c` is the shared context budget, not `c × slots`, and `pi`'s fixed per-message overhead is
+small (both confirmed — see [`../reference/config.md`](../reference/config.md)'s
+"Memory footprint" section). What's left open:
 
 ### Model architecture changes the real cost of context, meaningfully
 
-This is the clearest finding of the three. The two models in current use are structurally
-very different in how expensive context is to hold:
+The two models in current use are structurally very different in how expensive context is
+to hold:
 
 - **gpt-oss-120b**: 36 hidden layers, 64 attention heads, 8 KV heads (GQA), head_dim 64,
   with attention alternating between full and a 128-token sliding window across layers.
@@ -236,26 +192,18 @@ this package trio, and isn't the update path this project's docs already point a
 
 ## Additional services
 
-### Observability: `--metrics` first, Prometheus/Grafana only if needed
+### Observability: `--metrics` is on; Prometheus/Grafana only if needed
 
-`llama-server --metrics` turns on a Prometheus-format `/metrics` endpoint, off by default
-(confirmed live: `endpoint_metrics: false` on the loaded gpt-oss-120b instance). It exposes
-token throughput (`llamacpp:prompt_tokens_total`, `llamacpp:tokens_predicted_total`,
-`llamacpp:predicted_tokens_seconds`), request and slot pressure
-(`llamacpp:requests_processing`, `llamacpp:requests_deferred`,
-`llamacpp:n_busy_slots_per_decode`), and, most relevant to the context questions above,
-`llamacpp:n_tokens_max` — the high-water mark of context size actually observed. That last
-counter answers "how much context does a real pi session actually use" directly, without
-needing a dashboard. In router mode, each query needs a `?model={model_id}` query
-parameter or the endpoint returns a 400.
+`--metrics` is on — see [`../reference/config.md`](../reference/config.md)'s
+"Observability" section for the mechanism and what it exposes. What's still open is whether
+anything should consume it continuously.
 
 `prometheus` (3.14.0-1) and `grafana` (13.2.1-1) are both in Arch's `extra` repo, no AUR
 needed. A single-target Prometheus scraping one `/metrics` endpoint every 15 seconds is a
-light process, tens of MB of RAM and negligible CPU; Grafana idles similarly. Both are small
-next to the roughly 4.1Gi free while a model is loaded, but neither is free, and turning on
-`--metrics` and reading `n_tokens_max`/`requests_deferred` with `curl` or a short script
-already answers the concrete question in front of us. Reaching for a dashboard now solves a
-problem — watching this over time — that doesn't exist yet.
+light process, tens of MB of RAM and negligible CPU; Grafana idles similarly — both small
+next to the roughly 4.1Gi free while a model is loaded, but neither is free, and a `curl`
+spot-check already answers the concrete question in front of us today. Reaching for a
+dashboard solves a problem — watching this over time — that doesn't exist yet.
 
 Plain Prometheus+Grafana is the right-sized choice over a full Grafana LGTM stack
 (Loki+Grafana+Tempo+Mimir/Prometheus, typically the `grafana/otel-lgtm` all-in-one image)
@@ -267,15 +215,10 @@ while a model is loaded, for two components (Loki, Tempo) sitting idle with zero
 flowing in. That's on the order of 40-80x heavier than plain Prometheus+Grafana for
 components this use case has no need for.
 
-**Verdict:** recommend turning on `--metrics` (one flag in `models.ini`) as part of the
-context follow-up above; hold off on Prometheus/Grafana until there's an actual need to
-watch trends rather than spot-check a number; rule out a full LGTM stack outright unless
-logs or traces from something else are actually being collected later.
-
-**Done** (2026-09-11): `metrics = true` is on in `profiles/unified-96gb.ini`'s `[*]`
-section. `/metrics?model=...` now returns Prometheus output for every loaded model instead
-of the `501 not_supported_error` seen before this change — used directly for both
-measurements above.
+**Verdict:** hold off on Prometheus/Grafana until there's an actual need to watch trends
+rather than spot-check a number; rule out a full LGTM stack outright unless logs or traces
+from something else are actually being collected later. `outpost server metrics` (queued —
+`context/roadmap.toml` goal `outpost-toolkit`) is the nearer-term consumer.
 
 ### Gateway/proxy, browser chat UI, RAG
 
@@ -289,29 +232,19 @@ investigation.
 
 Roughly in order — each step's result should inform whether the next one is worth doing:
 
-1. **Done** (2026-09-11) — turned on `--metrics` in `[*]` in `profiles/unified-96gb.ini` and
-   restarted. See "Observability" above.
-2. **Done** (2026-09-11) — tested `-np 1` transiently (not persisted) and diffed GPU memory
-   (`amdgpu_top -p`, not `ps` RSS — see "Slot count and KV-unified" above) against auto:
-   4 slots and 1 slot both hold at ~61.2G. Confirms the kv-unified sizing read; `-np` stays
-   at auto in the checked-in profile.
-3. **Done** (2026-09-11) — sent one trivial message in a fresh `pi` session and read
-   `n_prompt_tokens: 1723` off `/slots`, cross-checked against `/metrics`' `n_tokens_max`.
-   See "Why pi's session shows ~30k" above — the fixed overhead is much smaller than that
-   figure suggested; the ~30k comes from conversation accumulation, not fixed overhead.
-4. **Add a `[unsloth/Qwen3-Coder-Next-GGUF:Q5_K_M]` section** to `models.ini` with a larger
+1. **Add a `[unsloth/Qwen3-Coder-Next-GGUF:Q5_K_M]` section** to `models.ini` with a larger
    `c` than gpt-oss-120b's, and confirm via `/props`/`/slots` that it loads and holds the
    larger window without a proportional memory jump — validates the architecture-driven
    cost difference in practice, and gives Qwen3-Coder-Next the context budget its
    architecture can actually afford.
-5. **Turn on `--cache-reuse`** (start with a moderate chunk size, such as 256) and watch
+2. **Turn on `--cache-reuse`** (start with a moderate chunk size, such as 256) and watch
    prompt eval time and `n_prompt_tokens_cache` in the router's logs across a multi-turn
    `pi` session where earlier tool output gets summarized or dropped.
-6. **Set `--slot-save-path`** to a directory on the dedicated model-storage drive and verify
+3. **Set `--slot-save-path`** to a directory on the dedicated model-storage drive and verify
    a `pi` session survives an intentional `systemctl restart llama-router` without full
    reprocessing — this is also the piece that makes the "restart after every `llama-cpp`
    update" step below cheap instead of disruptive.
-7. **Install the `llama-router` pacman hook** described above, then confirm it by forcing a
+4. **Install the `llama-router` pacman hook** described above, then confirm it by forcing a
    no-op reinstall of `llama-cpp` (`sudo pacman -S llama-cpp`) and checking
    `journalctl -u llama-router` for the restart, rather than waiting for a real upstream
    update to prove it out.
