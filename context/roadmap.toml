@@ -1,0 +1,67 @@
+# Roadmap — the path to the target end state, holding only what remains. Maintained by
+# the marathon-roadmap extension; the format is the plugin's references/manifest.md.
+
+next = [
+  "models-layout.restructure",
+  "tuning.metrics-and-overhead",
+  "tuning.update-restart-hook",
+  "tuning.qwen-context-budget",
+  "tuning.cache-reuse-tuning",
+  "tuning.slot-persistence",
+]
+
+[goals.models-layout]
+name = "Host-agnostic models/ layout and reference docs"
+summary = "models/ becomes a host-agnostic reference plus administration tooling, ahead of the tuning goal, so the documentation tuning produces has a proper place to land instead of accumulating under a host-specific directory."
+context = ["context/concepts/models-tooling.md"]
+
+[goals.models-layout.tasks.restructure]
+name = "Settle and apply the host-agnostic models/ layout"
+summary = "Decide the new directory shape (separating host-agnostic reference content from per-host scaffolding), decide or deliberately defer the Go-CLI-vs-parameterized-script question, and migrate framework-desktop's existing install.sh/restart-router.sh/models.ini into it. Writing the three new reference docs (GGUF characteristics, HF compatibility matrix, admin guide) is not required here — only a settled place for them to go."
+proof = "models/ (or its renamed equivalent) cleanly separates host-agnostic reference content from framework-desktop's concrete profile; the router still starts and pi still connects afterward, unchanged in behavior."
+
+[goals.tuning]
+name = "Framework Desktop context, update, and observability tuning"
+summary = "The router's context/session behavior, update-restart path, and observability are tuned and verified against real measurements on the Framework Desktop host."
+criteria = ["Every task beneath this goal is closed."]
+context = ["research/framework-desktop-followups.md"]
+
+[goals.tuning.tasks.metrics-and-overhead]
+name = "Turn on metrics, pin slot count, measure pi's real overhead"
+summary = "Enable --metrics, set -np 1 explicitly, restart, and measure /slots + RSS against the current 4-slot/41.4G baseline; separately measure a fresh pi session's fixed n_prompt_tokens overhead against the configured 32768 c."
+proof = "/metrics is reachable and n_tokens_max is readable; /slots shows a single slot after restart with RSS compared to baseline; a recorded n_prompt_tokens number for a trivial pi message."
+
+[goals.tuning.tasks.update-restart-hook]
+name = "Restart llama-router automatically after a llama.cpp package update"
+summary = "Install the pacman hook (already drafted in research/framework-desktop-followups.md) targeting llama-cpp, ggml, and ggml-vulkan, and verify it fires only on a transaction touching one of them."
+proof = "A forced `sudo pacman -S llama-cpp` reinstall triggers a `systemctl restart llama-router`, visible in `journalctl -u llama-router`; an update to an unrelated package does not."
+
+[goals.tuning.tasks.qwen-context-budget]
+name = "Give Qwen3-Coder-Next its own, larger context budget"
+summary = "Add a [unsloth/Qwen3-Coder-Next-GGUF:Q5_K_M] section to models/framework-desktop/models.ini with a larger c than gpt-oss-120b's, and confirm it loads and holds the larger window without a proportional memory jump."
+proof = "/props and /slots show the larger n_ctx for the Qwen3-Coder-Next instance; RSS growth is well short of proportional to the c increase."
+
+[goals.tuning.tasks.cache-reuse-tuning]
+name = "Enable and validate --cache-reuse"
+summary = "Turn on --cache-reuse with a moderate chunk size and observe prompt eval time / n_prompt_tokens_cache across a multi-turn pi session where earlier tool output gets pruned or reordered."
+proof = "A multi-turn pi session shows non-zero n_prompt_tokens_cache after a prefix-breaking edit, with a measurable drop in prompt eval time versus --cache-reuse off."
+
+[goals.tuning.tasks.slot-persistence]
+name = "Persist slot KV cache across router restarts"
+summary = "Set --slot-save-path to a directory on the dedicated model-storage drive and verify a pi session survives an intentional llama-router restart without full reprocessing."
+proof = "A pi session's next turn after a deliberate `systemctl restart llama-router` shows reduced prompt eval versus a cold reload."
+
+[backlog.gateway-proxy]
+name = "Gateway/proxy in front of the router"
+summary = "Add only once a second client needs the router's models through one shared front end."
+context = ["capabilities/gateway-proxy.md"]
+
+[backlog.rag]
+name = "Local retrieval / vector search"
+summary = "Add only once a corpus too large for the model's context window needs indexing."
+context = ["capabilities/rag.md"]
+
+[backlog.browser-chat-ui]
+name = "Browser chat UI (Open WebUI)"
+summary = "Stand up whenever chatting with the hosted models from a phone or a second device becomes wanted."
+context = ["capabilities/browser-chat-ui.md"]

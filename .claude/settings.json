@@ -1,0 +1,6 @@
+{
+  "plansDirectory": "./.claude/plans",
+  "permissions": {
+    "allow": ["Skill(marathon:marathon)"]
+  }
+}

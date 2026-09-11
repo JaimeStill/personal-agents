@@ -64,3 +64,9 @@ better model has since emerged. Each device with a running router keeps its conc
 configuration under `models/<device>/` (e.g.
 [`models/framework-desktop/`](models/framework-desktop/)) — the preset file actually in
 use, and the scripts that apply and restart it.
+
+[`capabilities/`](capabilities/README.md) is a similar standing reference, one file per
+capability considered but not yet added on top of the running setup (a gateway/proxy, RAG,
+a browser chat UI) — what it would take, and what would make it worth doing.
+[`research/`](research/) holds the dated investigations (host state, live measurements,
+options considered) that back both `models/` and `capabilities/`'s current calls.
