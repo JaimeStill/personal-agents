@@ -2,23 +2,12 @@
 # the marathon-roadmap extension; the format is the plugin's references/manifest.md.
 
 next = [
-  "models-layout.restructure",
   "tuning.metrics-and-overhead",
   "tuning.update-restart-hook",
   "tuning.qwen-context-budget",
   "tuning.cache-reuse-tuning",
   "tuning.slot-persistence",
 ]
-
-[goals.models-layout]
-name = "Host-agnostic models/ layout and reference docs"
-summary = "models/ becomes a host-agnostic reference plus administration tooling, ahead of the tuning goal, so the documentation tuning produces has a proper place to land instead of accumulating under a host-specific directory."
-context = ["context/concepts/models-tooling.md"]
-
-[goals.models-layout.tasks.restructure]
-name = "Settle and apply the host-agnostic models/ layout"
-summary = "Decide the new directory shape (separating host-agnostic reference content from per-host scaffolding), decide or deliberately defer the Go-CLI-vs-parameterized-script question, and migrate framework-desktop's existing install.sh/restart-router.sh/models.ini into it. Writing the three new reference docs (GGUF characteristics, HF compatibility matrix, admin guide) is not required here — only a settled place for them to go."
-proof = "models/ (or its renamed equivalent) cleanly separates host-agnostic reference content from framework-desktop's concrete profile; the router still starts and pi still connects afterward, unchanged in behavior."
 
 [goals.tuning]
 name = "Framework Desktop context, update, and observability tuning"
