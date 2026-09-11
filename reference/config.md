@@ -48,14 +48,17 @@ a set of instantiated copies, not a source of truth in itself:
 
 - [`README.md`](README.md) holds one recipe per model or model family — what override(s)
   it needs and why, organized by memory tier.
-- `<machine>/models.ini` under this directory (e.g.
-  [`framework-desktop/models.ini`](framework-desktop/)) is the concrete file a given
-  machine's router actually reads, `[*]` plus whichever per-model sections that machine
-  currently uses, each copied from its README recipe. A comment above a copied section
-  should note which recipe it came from, so a future change to the recipe has an obvious
-  set of places to re-propagate to.
-- `<machine>/install.sh` symlinks that machine's `models.ini` into the location its
-  systemd unit reads from; `<machine>/restart-router.sh` restarts the service afterward.
+- [`../profiles/`](../profiles/)`<tier>.ini` is the concrete file a given host's router
+  actually reads, `[*]` plus whichever per-model sections that host currently uses, each
+  copied from its README recipe. It's keyed by hardware capability tier — matching this
+  doc's own memory-tier headings — not by hostname or device, so a second host in the same
+  capability class reuses the same file instead of getting its own copy. A comment above a
+  copied section should note which recipe it came from, so a future change to the recipe
+  has an obvious set of places to re-propagate to.
+- [`../admin/`](../admin/) holds the tooling, dispatched through `outpost` (`outpost
+  preset install <tier>`, `outpost service restart`, `outpost service status`) or called
+  directly — see [`../admin/README.md`](../admin/README.md) for the commands and
+  `../admin/install.sh` to put them on your `PATH`.
 
 This is a manual-propagation convention, not an enforced one — proportionate to a
 personal, occasionally-updated setup. It stops being proportionate if this ever grows into

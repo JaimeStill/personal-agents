@@ -1,7 +1,7 @@
 # Future capabilities
 
 A standing reference for capabilities considered but not yet added on top of the running
-host/remote setup — parallel to [`../models/README.md`](../models/README.md): revisited
+host/remote setup — parallel to [`../reference/README.md`](../reference/README.md): revisited
 when the picture changes (a new need shows up, host headroom changes, a candidate tool
 matures) rather than written once and left alone. Each file below evaluates one capability:
 what it would take, what it would actually add over the setup as it stands today, and what
