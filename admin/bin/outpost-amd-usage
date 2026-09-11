@@ -1,0 +1,9 @@
+#!/bin/bash
+# Thin wrapper over `amdgpu_top -p` - a single-shot per-process VRAM/GTT
+# dump, not the continuous TUI modes. This is the exact command
+# reference/config.md's "Memory footprint" section already tells a reader
+# to run by hand: on unified-memory hardware, the GPU memory llama-server
+# holds is invisible to ps/free-style RSS.
+set -euo pipefail
+
+exec amdgpu_top -p

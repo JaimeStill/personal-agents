@@ -2,7 +2,6 @@
 # the marathon-roadmap extension; the format is the plugin's references/manifest.md.
 
 next = [
-  "outpost-toolkit.core-commands",
   "tuning.update-restart-hook",
   "tuning.qwen-context-budget",
   "tuning.cache-reuse-tuning",
@@ -34,16 +33,6 @@ proof = "A multi-turn pi session shows non-zero n_prompt_tokens_cache after a pr
 name = "Persist slot KV cache across router restarts"
 summary = "Set --slot-save-path to a directory on the dedicated model-storage drive and verify a pi session survives an intentional llama-router restart without full reprocessing."
 proof = "A pi session's next turn after a deliberate `systemctl restart llama-router` shows reduced prompt eval versus a cold reload."
-
-[goals.outpost-toolkit]
-name = "outpost as a llama.cpp/systemd/GPU toolkit"
-summary = "Grow outpost past install-and-restart into a CLI over the router's HTTP API and the host's systemd/amdgpu/vulkan tooling, so operating this setup doesn't require remembering curl incantations or command sequences scattered across underlying tools."
-criteria = ["Every task beneath this goal is closed."]
-
-[goals.outpost-toolkit.tasks.core-commands]
-name = "Survey and build the core outpost command set"
-summary = "Investigate llama.cpp's HTTP API, amdgpu_top, and related host tooling for what's worth wrapping. Build outpost server metrics (formatted /metrics read) and outpost server models (list/load/unload against /models) at minimum; add amd/vulkan subcommands for whatever else earns its place, per the survey."
-proof = "outpost server metrics and outpost server models work against the live router; the survey's findings (what got wrapped, what didn't, and why) are recorded."
 
 [backlog.gateway-proxy]
 name = "Gateway/proxy in front of the router"
