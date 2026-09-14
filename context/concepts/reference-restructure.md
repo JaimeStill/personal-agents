@@ -23,14 +23,19 @@ anticipated below.
 ## What isn't settled
 
 - Where the split lines fall in `config.md` — whether it's worth decomposing now or only
-  once it's demonstrably too large (126 lines isn't yet, by this repo's own standard of
-  adding structure when a need shows up, not preemptively).
+  once it's demonstrably too large.
 - What the model-selection content's new filename(s) should be, and whether "how to reason
   about it" and "by memory tier" split into two files or stay one.
 - Whether this is one session's work or naturally falls out of the next few sessions that
   touch `reference/` anyway (each adding its findings to the right file as it goes, per the
   pattern this session just followed for `config.md`).
 
-Assumes `reference/README.md`'s dual role (orientation + content) is actually a problem
-worth fixing, not just a size the architect is comfortable with — recheck that before
-committing effort here.
+The architect now considers the split worth doing deliberately rather than waiting for it
+to fall out of ordinary sessions: `tuning.qwen-context-budget`'s `c`-sizing findings and
+`tuning.checkpoint-tuning`'s caching/checkpoint tuning are exactly the kind of dense,
+model-specific result `config.md` and `README.md` need clearly separated homes for, and
+`config.md` has grown past 150 lines across five fairly separate topics (the preset
+mechanism, the propagation convention, observability, memory measurement, context-budget
+sizing, and now caching/checkpoints) since this note was raised. `reference/README.md`'s
+dual role is no longer in question; a `plan` session should settle the concrete split
+(filenames, where the lines fall) before a `start` session executes it.

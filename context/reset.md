@@ -2,33 +2,34 @@
 
 - **Status:** closeout
 - **Session:** start
-- **Branch:** tuning.cache-reuse-tuning
+- **Branch:** tuning.checkpoint-tuning
 
 ## Disposition
 - **Integrated:** `research/framework-desktop-followups.md`'s "Caching and persistence
-  flags" section — replaced the `--cache-reuse` recommendation with a source-confirmed
-  finding: the flag is dead code in the installed build (llama-cpp 0.4.0-1, `b10809`), and
-  `--ctx-checkpoints` is the actual mechanism behind any non-prefix reuse, untuned at its
-  default spacing. Added "How to read reuse from a live request" (the
-  `usage.prompt_tokens_details.cached_tokens`/`timings` fields and the `id_slot`-pinning
-  gotcha). Also added a short pointer to those fields in `reference/config.md`'s
-  Observability section, closing the gap noted at the start of this session.
-- **Culled:** `research/framework-desktop-followups.md`'s "What to try first" item 1
-  (turn on `--cache-reuse`) — answered negatively, dropped. Added tuning
-  `--checkpoint-min-step` as a new, not-yet-attempted item, since it's the real lever this
-  session's finding points at.
-- **Roadmap:** `context/roadmap.toml` — closed `tuning.cache-reuse-tuning` with that
-  negative finding as its disposition; added `tuning.checkpoint-tuning` (tune
-  `--checkpoint-min-step` against the same scripted prefix-break comparison) as the task
-  this finding points at directly, ahead of the existing `tuning.slot-persistence`.
-- **Config:** `profiles/unified-96gb.ini` — `[*]` carries a comment explaining why
-  `--cache-reuse` is deliberately absent, so a future session doesn't re-add it without
-  the context.
+  flags" section — replaced the untested `--checkpoint-min-step` note with the confirmed
+  finding: `checkpoint-min-step = 4096` (tuned down from the 8192 default), why it was
+  chosen over an equally effective `1024` (the 32-checkpoint budget's reach, `32 x
+  checkpoint-min-step`, matches Qwen3-Coder-Next's configured `c` at 4096 but only a
+  quarter of it at 1024), the live measurements (12/3870 tokens cached at the default vs.
+  5122/5170 at 4096, a ~17.7x drop in prompt processing time), and the upstream source
+  investigation (the mechanism's SWA-only origin, its generalization to hybrid/recurrent
+  architectures, and the still-open PRs refining that generalization's correctness past our
+  installed build). Closed out the "What to try first" list to its one remaining item.
+- **Retained:** `context/concepts/reference-restructure.md` — added the architect's
+  endorsement and this session's (plus `tuning.qwen-context-budget`'s) evidence for it.
+  Not promoted to `design/`: the split itself — filenames, where `config.md`'s lines fall —
+  isn't settled yet, which is exactly what the next session's `plan` pass is for.
+- **Roadmap:** `context/roadmap.toml` — closed `tuning.checkpoint-tuning` with the tuned
+  value as its disposition. Added `reference-docs.restructure` (goal `reference-docs`) and
+  put it ahead of `tuning.slot-persistence` in `next`, per the architect: the restructure
+  should happen before further sessions add more findings on top of `reference/`'s current
+  shape.
+- **Config:** `profiles/unified-96gb.ini` — `[*]` carries `checkpoint-min-step = 4096` with
+  a comment explaining the measurement and the choice over `1024`, matching the existing
+  `--cache-reuse` comment's style.
 
 ## Next-focus
-tuning.checkpoint-tuning — `--cache-reuse` is confirmed dead in this build;
-`--ctx-checkpoints` is the only mechanism actually providing non-prefix reuse, untested at
-a smaller `--checkpoint-min-step` than the 8192-token default. Script a same-slot-pinned,
-multi-turn prefix-break comparison against `/v1/chat/completions` (the same approach this
-session used, per `research/framework-desktop-followups.md`'s "How to read reuse from a
-live request") against a tuned spacing. Start here next session.
+`reference-docs.restructure` — not yet scoped. Start with a `plan` session (not `start`) to
+settle the split of `reference/README.md` (overview + index) and `reference/config.md`
+(now five fairly separate topics) per `context/concepts/reference-restructure.md`, before a
+later session executes it. `tuning.slot-persistence` follows after.

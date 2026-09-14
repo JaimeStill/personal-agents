@@ -106,23 +106,37 @@ model. Against that pattern:
   auto-picked slots sit idle the whole time — this is the mechanism that would keep an idle
   slot's context around without it occupying live GPU KV space, which matters more if `-np`
   stays at auto than if it's pinned to 1.
-- **`--ctx-checkpoints`/`--checkpoint-min-step`** (defaults 32 checkpoints, 8192-token
-  spacing): **the actual mechanism behind any non-prefix reuse**, not a marginal
-  concurrent-client feature as first assessed below — the live test's `restored context
-  checkpoint (pos_min=18, pos_max=18, n_tokens=19, n_past=19)` log line is this feature
-  firing, not `--cache-reuse`. At its default spacing it only had a checkpoint at the
-  trivial common-prefix boundary to restore to, so it saved nothing beyond that for a large
-  edit near the start of the conversation — untested whether a smaller
-  `--checkpoint-min-step` would place a checkpoint usefully closer to where `pi` actually
-  prunes tool output.
+- **`--ctx-checkpoints`/`--checkpoint-min-step`** (32 checkpoints, `checkpoint-min-step =
+  4096` in `profiles/unified-96gb.ini`, tuned down from the 8192 default): **the mechanism
+  behind any non-prefix reuse**, not a marginal concurrent-client feature as first assessed
+  below — the live test's `restored context checkpoint (pos_min=18, pos_max=18,
+  n_tokens=19, n_past=19)` log line is this feature firing, not `--cache-reuse`. It
+  originated upstream as SWA-only checkpointing ([PR
+  #15293](https://github.com/ggml-org/llama.cpp/pull/15293), bounded by the SWA window
+  size) and was later generalized to hybrid/recurrent architectures — the mechanism
+  Qwen3-Coder-Next's 36 Gated DeltaNet layers need, since a recurrent state can't be
+  truncated back like an ordinary causal KV cache. A checkpoint only ever lands at the
+  trivial common-prefix boundary when the stable prefix before an edit is shorter than
+  `checkpoint-min-step`; once the prefix clears the spacing, reuse is near-total. Measured
+  live against a same-slot-pinned prefix-break comparison (methodology below): at the 8192
+  default, a ~3870-token stable prefix got 12/3870 tokens cached (~6.1s prompt
+  processing); at 4096, a ~5170-token prefix got 5122/5170 cached (~350ms — a ~17.7x drop).
+  4096 was chosen over an equally effective 1024 because the checkpoint budget's reach is
+  `32 x checkpoint-min-step`: 4096 matches that reach (131072) exactly to Qwen3-Coder-Next's
+  configured `c`, where 1024's reach (32768, a quarter of it) risks evicting early
+  checkpoints in a long session. The checkpoint-restored completion was verified
+  byte-correct against a cold run. Several upstream PRs refining hybrid/recurrent
+  checkpoint correctness and eviction policy (e.g. [#24899](https://github.com/ggml-org/llama.cpp/pull/24899),
+  [#25592](https://github.com/ggml-org/llama.cpp/pull/25592)) are still open as of this
+  writing, postdating the installed build (0.4.0-dev, build 10809) — no correctness or
+  memory issue was observed in live testing, but this area of llama.cpp is still moving.
 
 Net: `--cache-prompt` (already on) handles pure prefix growth. `--cache-reuse` does nothing
-in this build regardless of setting — leave it unset. `--ctx-checkpoints` is the mechanism
-that actually matters for `pi`'s prune-and-reorder pattern, and is untuned; worth a future
-session tuning `--checkpoint-min-step` against real edit sizes before concluding there's no
-lever here. `--slot-save-path` matters specifically for surviving router restarts.
-`--cache-ram`/`--cache-idle-slots` matter more if the 4-slot auto layout stays than if
-`-np` gets pinned to 1.
+in this build regardless of setting — leave it unset. `--ctx-checkpoints`/
+`--checkpoint-min-step` is the mechanism that actually matters for `pi`'s prune-and-reorder
+pattern, and is now tuned (`checkpoint-min-step = 4096`). `--slot-save-path` matters
+specifically for surviving router restarts. `--cache-ram`/`--cache-idle-slots` matter more
+if the 4-slot auto layout stays than if `-np` gets pinned to 1.
 
 ### How to read reuse from a live request
 
@@ -288,12 +302,8 @@ investigation.
 
 ## What to try first
 
-Roughly in order — each step's result should inform whether the next one is worth doing:
-
-1. **Set `--slot-save-path`** to a directory on the dedicated model-storage drive and verify
-   a `pi` session survives an intentional `systemctl restart llama-router` without full
-   reprocessing — this is also the piece that makes the restart after every `llama-cpp`
-   update (now automatic — see "Updating llama.cpp" above) cheap instead of disruptive.
-2. **Tune `--checkpoint-min-step`** against a real `pi` prune/reorder edit, now that
-   `--cache-reuse` is confirmed dead and context checkpoints are the only mechanism actually
-   in play for that pattern (see "Caching and persistence flags" above) — not attempted yet.
+**Set `--slot-save-path`** to a directory on the dedicated model-storage drive and verify a
+`pi` session survives an intentional `systemctl restart llama-router` without full
+reprocessing — this is also the piece that makes the restart after every `llama-cpp` update
+(now automatic — see "Updating llama.cpp" above) cheap instead of disruptive. Not attempted
+yet (`tuning.slot-persistence`).
