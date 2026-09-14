@@ -2,7 +2,6 @@
 # the marathon-roadmap extension; the format is the plugin's references/manifest.md.
 
 next = [
-  "tuning.qwen-context-budget",
   "tuning.cache-reuse-tuning",
   "tuning.slot-persistence",
 ]
@@ -12,11 +11,6 @@ name = "Framework Desktop context, update, and observability tuning"
 summary = "The router's context/session behavior, update-restart path, and observability are tuned and verified against real measurements on the Framework Desktop host."
 criteria = ["Every task beneath this goal is closed."]
 context = ["research/framework-desktop-followups.md"]
-
-[goals.tuning.tasks.qwen-context-budget]
-name = "Give Qwen3-Coder-Next its own, larger context budget"
-summary = "Add a [unsloth/Qwen3-Coder-Next-GGUF:Q5_K_M] section to profiles/unified-96gb.ini with a larger c than gpt-oss-120b's, and confirm it loads and holds the larger window without a proportional memory jump."
-proof = "/props and /slots show the larger n_ctx for the Qwen3-Coder-Next instance; RSS growth is well short of proportional to the c increase."
 
 [goals.tuning.tasks.cache-reuse-tuning]
 name = "Enable and validate --cache-reuse"
