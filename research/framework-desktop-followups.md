@@ -81,10 +81,20 @@ model. Against that pattern:
 - **`--cache-prompt`** (on by default): directly relevant. This is what lets a follow-up
   message in the same conversation reuse the already-computed KV cache for the unchanged
   prefix instead of reprocessing it — exactly `pi`'s pattern, and it's already on.
-- **`--cache-reuse N`** (default 0, off): relevant, currently unused. Lets the server reuse
-  cached KV via shifting even when the new prompt isn't a byte-identical prefix of the old
-  one — for example, an edited earlier message — worth enabling for a coding-agent workflow
-  where tool outputs get pruned or reordered.
+- **`--cache-reuse N`** (default 0, off): **dead in this build, confirmed against source.**
+  The flag's own `--help` text still describes it as "min chunk size to attempt reusing from
+  the cache via KV shifting," and every write-up of it online describes shifting a matching
+  chunk into place even when it isn't a byte-identical prefix. Turning it on and testing
+  against a scripted prefix-breaking edit (`tuning.cache-reuse-tuning`) showed no such reuse
+  at any chunk size — every request hit `cached_tokens: 19` (just the trivial common-prefix
+  boundary) regardless of whether `--cache-reuse` was set at all. The router's own
+  `system_fingerprint` (`b10809-5266f24da7`) pins the exact upstream commit; fetching every
+  file under `tools/server/` at that commit and searching for `cache_reuse`/`n_cache_reuse`
+  turns up only two guard warnings in `server-context.cpp` that force it to `0` under
+  multimodal or an unsupported context type — no chunk-matching or KV-shift code exists
+  anywhere in the server at this commit. The flag parses and prints at startup; it does
+  nothing. Whatever reuse a request gets for a non-prefix edit comes entirely from the
+  context-checkpoint mechanism below, not from this flag.
 - **`--slot-save-path PATH`** (off by default): relevant to the cross-restart case
   specifically. It persists a slot's KV cache to disk so a `pi` session survives a router
   restart (after an update, say — see the next section) without reprocessing the whole
@@ -97,13 +107,41 @@ model. Against that pattern:
   slot's context around without it occupying live GPU KV space, which matters more if `-np`
   stays at auto than if it's pinned to 1.
 - **`--ctx-checkpoints`/`--checkpoint-min-step`** (defaults 32 checkpoints, 8192-token
-  spacing): mainly a concurrent/multi-client durability feature. Marginal value for a single
-  sequential session compared to `--cache-prompt` and `--cache-reuse` above.
+  spacing): **the actual mechanism behind any non-prefix reuse**, not a marginal
+  concurrent-client feature as first assessed below — the live test's `restored context
+  checkpoint (pos_min=18, pos_max=18, n_tokens=19, n_past=19)` log line is this feature
+  firing, not `--cache-reuse`. At its default spacing it only had a checkpoint at the
+  trivial common-prefix boundary to restore to, so it saved nothing beyond that for a large
+  edit near the start of the conversation — untested whether a smaller
+  `--checkpoint-min-step` would place a checkpoint usefully closer to where `pi` actually
+  prunes tool output.
 
-Net: `--cache-prompt` (already on) and `--cache-reuse` (off, worth turning on) matter most
-for `pi`'s actual pattern. `--slot-save-path` matters specifically for surviving router
-restarts. `--cache-ram`/`--cache-idle-slots` and the checkpoint flags matter more if the
-4-slot auto layout stays than if `-np` gets pinned to 1.
+Net: `--cache-prompt` (already on) handles pure prefix growth. `--cache-reuse` does nothing
+in this build regardless of setting — leave it unset. `--ctx-checkpoints` is the mechanism
+that actually matters for `pi`'s prune-and-reorder pattern, and is untuned; worth a future
+session tuning `--checkpoint-min-step` against real edit sizes before concluding there's no
+lever here. `--slot-save-path` matters specifically for surviving router restarts.
+`--cache-ram`/`--cache-idle-slots` matter more if the 4-slot auto layout stays than if
+`-np` gets pinned to 1.
+
+### How to read reuse from a live request
+
+`GET`/`POST` against `/v1/chat/completions` (and presumably the native `/completion`
+endpoint) exposes exactly what a session needs to check reuse, no extra flag or log
+verbosity required: `usage.prompt_tokens_details.cached_tokens` and a `timings` object with
+`cache_n` (tokens reused), `prompt_n` (tokens actually reprocessed), and `prompt_ms`.
+Confirmed live 2026-09-14. One easy-to-miss requirement: the router auto-assigns each
+request to whichever of its idle slots is free, so a multi-turn comparison must pin every
+request to the same slot with `"id_slot": N` in the request body — otherwise a later turn
+can land on a slot with no prior history at all, showing zero reuse for a reason that has
+nothing to do with any caching flag.
+
+This session's test script (not kept in the repo) sent a cold multi-turn exchange with two
+large "tool output" blocks, then replayed the same history with the first block pruned to
+a placeholder, comparing `cached_tokens`/`prompt_ms` on the resulting prefix-break request.
+That request shape doesn't depend on `--cache-reuse` specifically — the same approach
+applies unchanged to any server-side caching flag under test, one run per config value,
+each right after a fresh restart and model load.
 
 ## Updating llama.cpp
 
@@ -252,10 +290,10 @@ investigation.
 
 Roughly in order — each step's result should inform whether the next one is worth doing:
 
-1. **Turn on `--cache-reuse`** (start with a moderate chunk size, such as 256) and watch
-   prompt eval time and `n_prompt_tokens_cache` in the router's logs across a multi-turn
-   `pi` session where earlier tool output gets summarized or dropped.
-2. **Set `--slot-save-path`** to a directory on the dedicated model-storage drive and verify
+1. **Set `--slot-save-path`** to a directory on the dedicated model-storage drive and verify
    a `pi` session survives an intentional `systemctl restart llama-router` without full
    reprocessing — this is also the piece that makes the restart after every `llama-cpp`
    update (now automatic — see "Updating llama.cpp" above) cheap instead of disruptive.
+2. **Tune `--checkpoint-min-step`** against a real `pi` prune/reorder edit, now that
+   `--cache-reuse` is confirmed dead and context checkpoints are the only mechanism actually
+   in play for that pattern (see "Caching and persistence flags" above) — not attempted yet.
