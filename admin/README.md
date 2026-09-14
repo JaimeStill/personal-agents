@@ -34,6 +34,9 @@ the same way:
   way to see what `llama-server` actually holds on unified-memory hardware, where
   `ps`/`free`-style RSS reads far too low. See
   [`../reference/config.md`](../reference/config.md)'s "Memory footprint" section.
+- `outpost hooks install` (`outpost-hooks-install`) — symlinks every pacman hook in
+  [`../hooks/`](../hooks/) into `/etc/pacman.d/hooks/`, the same tracked-file-symlinked-
+  into-place pattern `outpost preset install` uses for `profiles/`.
 
 ## Adding a command
 
