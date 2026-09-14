@@ -140,7 +140,9 @@ routine this project settles on for updates, since nothing will remind you it's 
 
 A pacman hook (`/etc/pacman.d/hooks/`) closes this gap without needing to remember it, and
 does so precisely — it only fires when one of the named packages is actually part of the
-transaction, not on every `omarchy update` run:
+transaction, not on every `omarchy update` run. It's tracked in this repo at
+[`../hooks/llama-router-restart.hook`](../hooks/llama-router-restart.hook) and installed
+with `outpost hooks install` (`../admin/README.md`):
 
 ```ini
 [Trigger]
@@ -161,10 +163,13 @@ own guard hook (`/usr/share/libalpm/hooks/00-omarchy-update-guard.hook`) is an e
 example of the same mechanism on this host. Because a pacman hook triggers off the
 transaction's actual package list, it restarts the service only on a run that touched one of
 these three packages, and does nothing on every other `omarchy update` (Hyprland, waybar,
-whatever else) that doesn't. Installing it needs `sudo` and a file under `/etc/pacman.d/hooks/`
-— a small, easily reversible change (delete the file), but a live-host change nonetheless,
-so it's listed as a "what to try first" item below rather than applied as part of this
-report.
+whatever else) that doesn't.
+
+Installed and verified live on this host: a forced `sudo pacman -S llama-cpp` reinstall
+restarted `llama-router.service` (`journalctl -u llama-router` and its
+`ActiveEnterTimestamp` both moved to the reinstall's timestamp), and a forced reinstall of
+an unrelated, already-installed package (`jq`) left the service's `ActiveEnterTimestamp`
+and log untouched — the `Target` filter holds, not just the `Exec` line.
 
 ### Update cadence: how stale can this get?
 
@@ -242,9 +247,5 @@ Roughly in order — each step's result should inform whether the next one is wo
    `pi` session where earlier tool output gets summarized or dropped.
 3. **Set `--slot-save-path`** to a directory on the dedicated model-storage drive and verify
    a `pi` session survives an intentional `systemctl restart llama-router` without full
-   reprocessing — this is also the piece that makes the "restart after every `llama-cpp`
-   update" step below cheap instead of disruptive.
-4. **Install the `llama-router` pacman hook** described above, then confirm it by forcing a
-   no-op reinstall of `llama-cpp` (`sudo pacman -S llama-cpp`) and checking
-   `journalctl -u llama-router` for the restart, rather than waiting for a real upstream
-   update to prove it out.
+   reprocessing — this is also the piece that makes the restart after every `llama-cpp`
+   update (now automatic — see "Updating llama.cpp" above) cheap instead of disruptive.

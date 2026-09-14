@@ -1,0 +1,17 @@
+#!/bin/bash
+# Symlinks every pacman hook in hooks/ into /etc/pacman.d/hooks/, so pacman
+# picks them up. Re-run any time after pulling a change that adds or edits a
+# hook; safe to run repeatedly.
+set -euo pipefail
+
+self="$(readlink -f -- "${BASH_SOURCE[0]}")"
+hooks_dir="$(cd -- "$(dirname -- "$self")/../../hooks" && pwd)"
+target_dir="/etc/pacman.d/hooks"
+
+sudo mkdir -p "$target_dir"
+
+for hook in "$hooks_dir"/*.hook; do
+  name="${hook##*/}"
+  sudo ln -sfn "$hook" "$target_dir/$name"
+  echo "Linked $hook -> $target_dir/$name"
+done

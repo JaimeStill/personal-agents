@@ -2,7 +2,6 @@
 # the marathon-roadmap extension; the format is the plugin's references/manifest.md.
 
 next = [
-  "tuning.update-restart-hook",
   "tuning.qwen-context-budget",
   "tuning.cache-reuse-tuning",
   "tuning.slot-persistence",
@@ -13,11 +12,6 @@ name = "Framework Desktop context, update, and observability tuning"
 summary = "The router's context/session behavior, update-restart path, and observability are tuned and verified against real measurements on the Framework Desktop host."
 criteria = ["Every task beneath this goal is closed."]
 context = ["research/framework-desktop-followups.md"]
-
-[goals.tuning.tasks.update-restart-hook]
-name = "Restart llama-router automatically after a llama.cpp package update"
-summary = "Install the pacman hook (already drafted in research/framework-desktop-followups.md) targeting llama-cpp, ggml, and ggml-vulkan, and verify it fires only on a transaction touching one of them."
-proof = "A forced `sudo pacman -S llama-cpp` reinstall triggers a `systemctl restart llama-router`, visible in `journalctl -u llama-router`; an update to an unrelated package does not."
 
 [goals.tuning.tasks.qwen-context-budget]
 name = "Give Qwen3-Coder-Next its own, larger context budget"

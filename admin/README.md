@@ -1,8 +1,9 @@
 # outpost
 
 Administration tooling for this repository's `llama-router` setup: applying a profile and
-managing the systemd service, querying the router's HTTP API, and reading the host's GPU
-usage — see [`../context/roadmap.toml`](../context/roadmap.toml) for what's planned next.
+managing the systemd service, installing the pacman restart hook, querying the router's
+HTTP API, and reading the host's GPU usage — see
+[`../context/roadmap.toml`](../context/roadmap.toml) for what's planned next.
 
 ## The name
 
@@ -34,6 +35,9 @@ the same way:
   way to see what `llama-server` actually holds on unified-memory hardware, where
   `ps`/`free`-style RSS reads far too low. See
   [`../reference/config.md`](../reference/config.md)'s "Memory footprint" section.
+- `outpost hooks install` (`outpost-hooks-install`) — symlinks every pacman hook in
+  [`../hooks/`](../hooks/) into `/etc/pacman.d/hooks/`, the same tracked-file-symlinked-
+  into-place pattern `outpost preset install` uses for `profiles/`.
 
 ## Adding a command
 
