@@ -15,8 +15,9 @@ The router (`llama-router.service`) runs `llama-server --models-dir /home/jaime/
 --no-models-autoload --host 100.87.194.83 --port 8080 --models-preset
 /etc/llama-router/models.ini`, per `setup/hosting-setup.md`. At the time of this
 investigation it had `unsloth/gpt-oss-120b-GGUF:Q4_K_M` loaded (not Qwen3-Coder); see
-[`../reference/config.md`](../reference/config.md) for its real memory footprint and why
-`ps`/`free`-style RSS reads far too low on this hardware. `/mnt/models` (the dedicated
+[`../reference/memory-footprint.md`](../reference/memory-footprint.md) for its real
+memory footprint and why `ps`/`free`-style RSS reads far too low on this hardware.
+`/mnt/models` (the dedicated
 drive) has 758G free of 916G. System RAM is 125Gi total; with that one model loaded, only
 about 4.1Gi was reported free (about 51Gi "available," counting reclaimable page cache). No
 caching, observability, proxy, or vector-store packages were installed (`redis`,
@@ -26,8 +27,8 @@ caching, observability, proxy, or vector-store packages were installed (`redis`,
 ## Context and session optimization
 
 `c` is the shared context budget, not `c × slots`, and `pi`'s fixed per-message overhead is
-small (both confirmed — see [`../reference/config.md`](../reference/config.md)'s
-"Memory footprint" section). What's left open:
+small (both confirmed — see
+[`../reference/memory-footprint.md`](../reference/memory-footprint.md)). What's left open:
 
 ### Model architecture changes the real cost of context, meaningfully
 
@@ -64,8 +65,9 @@ an order-of-magnitude difference (constant-per-layer versus linear-per-layer for
 quarter versus half of each network, respectively).
 
 This argues directly for per-model handling in `profiles/unified-96gb.ini` rather
-than one shared `[*] c = 32768` (mechanism per `reference/config.md`): gpt-oss-120b is the one
-that actually needs care around context size and slot count; Qwen3-Coder-Next has real
+than one shared `[*] c = 32768` (mechanism per `reference/config-presets.md`):
+gpt-oss-120b is the one that actually needs care around context size and slot count;
+Qwen3-Coder-Next has real
 headroom to run a substantially larger `c` at little extra memory cost, which the
 current shared setting leaves on the table. **Confirmed live** (see "What to try first"
 below): at `c = 131072` (4x gpt-oss's value, half Qwen3-Coder-Next's trained 262144),
@@ -266,8 +268,8 @@ this package trio, and isn't the update path this project's docs already point a
 
 ### Observability: `--metrics` is on; Prometheus/Grafana only if needed
 
-`--metrics` is on — see [`../reference/config.md`](../reference/config.md)'s
-"Observability" section for the mechanism and what it exposes. What's still open is whether
+`--metrics` is on — see [`../reference/observability.md`](../reference/observability.md)
+for the mechanism and what it exposes. What's still open is whether
 anything should consume it continuously.
 
 `prometheus` (3.14.0-1) and `grafana` (13.2.1-1) are both in Arch's `extra` repo, no AUR

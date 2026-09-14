@@ -74,8 +74,9 @@ took real troubleshooting, so the detail here is worth keeping even after it's w
   keyed to this device's ~90-96GB unified-memory tier, not to the device itself, so
   another host in the same tier reuses it. Model-tunable settings (`--jinja`, GPU offload,
   context size, and any per-model overrides) live there, not on the command line — see
-  [`../reference/config.md`](../reference/config.md) for why. `outpost preset install
-  unified-96gb` symlinks it into `/etc/llama-router/models.ini`; `outpost service restart`
-  restarts the service after a change — see [`../admin/README.md`](../admin/README.md).
+  [`../reference/config-presets.md`](../reference/config-presets.md) for why. `outpost
+  preset install unified-96gb` symlinks it into `/etc/llama-router/models.ini`; `outpost
+  service restart` restarts the service after a change — see
+  [`../admin/README.md`](../admin/README.md).
 - Package versions current as of this setup (September 2026): `llama-cpp` 0.4.0-1,
   `ggml-vulkan` 0.23.0-2, `amd-debug-tools` 0.2.21-1, `tailscale` 1.102.3-1.
