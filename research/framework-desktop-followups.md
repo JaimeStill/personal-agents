@@ -43,20 +43,35 @@ to hold:
   DeltaNet," a linear-attention mechanism that holds a fixed-size recurrent state instead of
   a cache that grows with sequence length.
 
-Qwen3-Coder-Next's context cost scales with only a quarter of its layers, at a narrower KV-head
-count (2 versus gpt-oss's 8) on top of that, while gpt-oss-120b's cost scales with roughly
-all 36 of its layers, minus whatever the sliding-window layers save. Qualitatively,
-Qwen3-Coder-Next is unambiguously far cheaper per token of context than gpt-oss-120b — this
-isn't a marginal difference, it's a different order of scaling (constant-per-layer versus
-linear-per-layer for three-quarters of the network). An exact head_dim for Qwen3-Coder-Next's
-gated-attention layers wasn't pinned down, so treat the direction and rough magnitude as
-confirmed, the exact ratio as not computed.
+**Update, now confirmed against the GGUF metadata directly** (`qwen3next.*` keys —
+`head_count_kv = 2`, `key_length = value_length = 256`): the per-token KV cost is
+`(key_length + value_length) × head_count_kv × 2 bytes` — identically **2048
+bytes/token/layer** for both models (Qwen: `(256+256) × 2 × 2`; gpt-oss:
+`(64+64) × 8 × 2`, its confirmed head_dim=64/8 KV heads). The "narrower KV-head count...
+on top of that" framing below was wrong — the narrower head count and the wider
+key/value length cancel out exactly. All of Qwen3-Coder-Next's saving comes from having
+a smaller fraction of its layers actually hold a growing KV cache: 12 of 48 (25%,
+`full_attention_interval = 4`) versus gpt-oss's roughly 18 of 36 (50%, alternating
+full/sliding-window). That's a real **1.5x per-token saving**, not "a different order of
+scaling" as the original paragraph below claimed — correcting that overstatement here
+rather than rewriting the reasoning that led to it:
+
+Qwen3-Coder-Next's context cost scales with only a quarter of its layers, while
+gpt-oss-120b's cost scales with roughly half of its 36, minus whatever the
+sliding-window layers save. Qualitatively, Qwen3-Coder-Next is cheaper per token of
+context than gpt-oss-120b, though the effect is the full-attention-layer fraction, not
+an order-of-magnitude difference (constant-per-layer versus linear-per-layer for a
+quarter versus half of each network, respectively).
 
 This argues directly for per-model handling in `profiles/unified-96gb.ini` rather
 than one shared `[*] c = 32768` (mechanism per `reference/config.md`): gpt-oss-120b is the one
-that actually needs care around context size and slot count; Qwen3-Coder-Next likely has
-real headroom to run a substantially larger `c` at little extra memory cost, which the
-current shared setting leaves on the table.
+that actually needs care around context size and slot count; Qwen3-Coder-Next has real
+headroom to run a substantially larger `c` at little extra memory cost, which the
+current shared setting leaves on the table. **Confirmed live** (see "What to try first"
+below): at `c = 131072` (4x gpt-oss's value, half Qwen3-Coder-Next's trained 262144),
+the loaded instance holds ~56.6GiB total (`amdgpu_top`: 8MiB VRAM + 57946MiB GTT)
+against a ~53GiB weight footprint — roughly 3.6GiB of KV cache and compute buffers for a
+4x larger context window, not a proportional jump.
 
 ### Caching and persistence flags, against pi's actual usage pattern
 
@@ -237,15 +252,10 @@ investigation.
 
 Roughly in order — each step's result should inform whether the next one is worth doing:
 
-1. **Add a `[unsloth/Qwen3-Coder-Next-GGUF:Q5_K_M]` section** to `models.ini` with a larger
-   `c` than gpt-oss-120b's, and confirm via `/props`/`/slots` that it loads and holds the
-   larger window without a proportional memory jump — validates the architecture-driven
-   cost difference in practice, and gives Qwen3-Coder-Next the context budget its
-   architecture can actually afford.
-2. **Turn on `--cache-reuse`** (start with a moderate chunk size, such as 256) and watch
+1. **Turn on `--cache-reuse`** (start with a moderate chunk size, such as 256) and watch
    prompt eval time and `n_prompt_tokens_cache` in the router's logs across a multi-turn
    `pi` session where earlier tool output gets summarized or dropped.
-3. **Set `--slot-save-path`** to a directory on the dedicated model-storage drive and verify
+2. **Set `--slot-save-path`** to a directory on the dedicated model-storage drive and verify
    a `pi` session survives an intentional `systemctl restart llama-router` without full
    reprocessing — this is also the piece that makes the restart after every `llama-cpp`
    update (now automatic — see "Updating llama.cpp" above) cheap instead of disruptive.

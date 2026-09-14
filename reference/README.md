@@ -129,3 +129,21 @@ Covered in detail in [`../preparation/framework-desktop.md`](../preparation/fram
 the concrete example already running in this repo: `unsloth/Qwen3-Coder-Next-GGUF:Q5_K_M`
 (MoE, 80B-total/3B-active, ~53GB), with `gpt-oss-120b` (MXFP4, ~59GB) as the fallback if
 the chat template misbehaves.
+
+Qwen3-Coder-Next gets a larger `c` than `[*]`'s default (`32768`, sized for gpt-oss-120b),
+by the method in [`config.md`](config.md#sizing-a-models-c). Its GGUF metadata
+(`qwen3next.*`) gives 48 layers with `full_attention_interval = 4` (12 real-KV-cache
+layers; the other 36 are Gated DeltaNet layers with a fixed-size state), `head_count_kv
+= 2`, `key_length = value_length = 256`, and a trained `context_length` of `262144`. Per
+token that's `(256+256) × 2 × 2 × 12 = 24,576 bytes` — versus gpt-oss-120b's confirmed
+`(64+64) × 8 × 2 × 18 = 36,864 bytes/token` (identical 2048 bytes/token/layer; the
+difference is entirely the full-attention-layer fraction, 25% vs. 50%). At any plausible
+`c` this cost is trivial next to the ~53GB weight footprint (0.75GiB at `c = 32768`,
+3.0GiB at `c = 131072`, even before assuming `--kv-unified` sharing), so the trained
+context is what actually binds, not memory. `c = 131072` — half the trained maximum,
+leaving margin below the RoPE-trained ceiling — is the recipe:
+
+```ini
+[unsloth/Qwen3-Coder-Next-GGUF:Q5_K_M]
+c = 131072
+```
