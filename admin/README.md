@@ -17,8 +17,9 @@ the same way:
 
 - `outpost preset install <tier>` (`outpost-preset-install`) — symlinks
   [`../profiles/`](../profiles/)`<tier>.ini` into the location the `llama-router` systemd
-  unit reads from. See [`../reference/config.md`](../reference/config.md) for what a tier
-  is and how profiles are organized.
+  unit reads from. See
+  [`../reference/config-convention.md`](../reference/config-convention.md) for what a
+  tier is and how profiles are organized.
 - `outpost service restart` (`outpost-service-restart`) — restarts `llama-router.service`
   and shows its status.
 - `outpost service status` (`outpost-service-status`) — shows the service's systemd status
@@ -29,12 +30,12 @@ the same way:
 - `outpost server metrics <model-id>` (`outpost-server-metrics`) — a formatted read of
   `GET /metrics?model=<id>`: prompt/generation throughput, request/slot pressure, and
   `n_tokens_max`. The model id is mandatory; run `outpost server models` to find one. See
-  [`../reference/config.md`](../reference/config.md)'s "Observability" section for what the
+  [`../reference/observability.md`](../reference/observability.md) for what the
   endpoint exposes.
 - `outpost amd usage` (`outpost-amd-usage`) — per-process VRAM/GTT via `amdgpu_top -p`, the
   way to see what `llama-server` actually holds on unified-memory hardware, where
   `ps`/`free`-style RSS reads far too low. See
-  [`../reference/config.md`](../reference/config.md)'s "Memory footprint" section.
+  [`../reference/memory-footprint.md`](../reference/memory-footprint.md).
 - `outpost hooks install` (`outpost-hooks-install`) — symlinks every pacman hook in
   [`../hooks/`](../hooks/) into `/etc/pacman.d/hooks/`, the same tracked-file-symlinked-
   into-place pattern `outpost preset install` uses for `profiles/`.

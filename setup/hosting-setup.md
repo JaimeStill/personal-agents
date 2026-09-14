@@ -151,9 +151,10 @@ llama-server \
 ## Per-model configuration
 
 `--models-preset` points at an INI file separating defaults every model gets from
-overrides a specific model needs — see [`../reference/config.md`](../reference/config.md)
-for the full specification, and [`../reference/README.md`](../reference/README.md) for
-which models need what. Source-control the preset file alongside everything else in this
+overrides a specific model needs — see
+[`../reference/config-presets.md`](../reference/config-presets.md) for the full
+specification, and [`../reference/README.md`](../reference/README.md) for which models
+need what. Source-control the preset file alongside everything else in this
 repository, so changes are diffable and reversible; [`../profiles/`](../profiles/) holds
 the concrete files and [`../admin/`](../admin/README.md) the tooling that symlinks one
 into place and restarts the service afterward.

@@ -58,13 +58,15 @@ Each doc links to the next and previous in this order.
 
 [`reference/`](reference/README.md) isn't a setup step — it's a standing reference for
 picking a model against a given host's memory budget, and the specification for how
-per-model configuration actually gets applied ([`reference/config.md`](reference/config.md)).
-Revisit it whenever the picture changes: new hardware, more memory, or just checking
-whether a better model has since emerged. Each host's concrete configuration lives under
-[`profiles/`](profiles/) as `<tier>.ini`, keyed by hardware capability tier rather than
-device (e.g. [`profiles/unified-96gb.ini`](profiles/unified-96gb.ini) — see
-`reference/config.md` for what a tier is), so hosts in the same capability class share a
-file. [`admin/`](admin/README.md) is the tooling that applies and restarts it (`outpost
+per-model configuration actually gets applied
+([`reference/config-presets.md`](reference/config-presets.md)). Revisit it whenever the
+picture changes: new hardware, more memory, or just checking whether a better model has
+since emerged. Each host's concrete configuration lives under [`profiles/`](profiles/) as
+`<tier>.ini`, keyed by hardware capability tier rather than device (e.g.
+[`profiles/unified-96gb.ini`](profiles/unified-96gb.ini) — see
+`reference/config-convention.md` for what a tier is), so hosts in the same capability
+class share a file. [`admin/`](admin/README.md) is the tooling that applies and restarts
+it (`outpost
 preset install <tier>`, `outpost service restart`).
 
 [`capabilities/`](capabilities/README.md) is a similar standing reference, one file per
