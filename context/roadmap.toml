@@ -2,7 +2,7 @@
 # the marathon-roadmap extension; the format is the plugin's references/manifest.md.
 
 next = [
-  "tuning.cache-reuse-tuning",
+  "tuning.checkpoint-tuning",
   "tuning.slot-persistence",
 ]
 
@@ -12,10 +12,10 @@ summary = "The router's context/session behavior, update-restart path, and obser
 criteria = ["Every task beneath this goal is closed."]
 context = ["research/framework-desktop-followups.md"]
 
-[goals.tuning.tasks.cache-reuse-tuning]
-name = "Enable and validate --cache-reuse"
-summary = "Turn on --cache-reuse with a moderate chunk size and observe prompt eval time / n_prompt_tokens_cache across a multi-turn pi session where earlier tool output gets pruned or reordered."
-proof = "A multi-turn pi session shows non-zero n_prompt_tokens_cache after a prefix-breaking edit, with a measurable drop in prompt eval time versus --cache-reuse off."
+[goals.tuning.tasks.checkpoint-tuning]
+name = "Tune --checkpoint-min-step for pi's prune/reorder pattern"
+summary = "--cache-reuse is confirmed dead in this build (tuning.cache-reuse-tuning); --ctx-checkpoints is the only mechanism actually providing non-prefix reuse, untested at a smaller --checkpoint-min-step than the 8192-token default. Reuse the scripted /v1/chat/completions prefix-break comparison (same-slot pinned) against a tuned spacing."
+proof = "The same scripted prefix-break comparison shows non-zero cached_tokens/cache_n and a measurable drop in prompt_ms at a tuned --checkpoint-min-step, versus the near-zero reuse measured at the default spacing this session."
 
 [goals.tuning.tasks.slot-persistence]
 name = "Persist slot KV cache across router restarts"
