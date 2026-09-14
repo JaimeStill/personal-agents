@@ -1,27 +1,23 @@
 # reset · personal-agents
 
 - **Status:** closeout
-- **Session:** plan
+- **Session:** start
 - **Branch:** reference-docs.restructure
 
 ## Disposition
-- **Retained:** `context/concepts/reference-restructure.md` — sharpened from open questions
-  to the settled split: `reference/README.md` becomes overview+index, its heuristics and
-  by-tier catalog move to `model-selection.md` and `model-tiers.md`; `config.md` dissolves
-  into five topic files (`config-presets.md`, `config-convention.md`, `observability.md`,
-  `memory-footprint.md`, `context-sizing.md`) by concern. Also states the cross-reference
-  sweep a `start` session needs: internal links between the moved content, the top-level
-  `README.md`'s "Reference" section, and `admin/README.md`'s three links into `config.md`.
-  Not promoted to `design/`: this session designed the shape but nothing has built against
-  it yet.
-- **Roadmap:** `context/roadmap.toml` — sharpened `reference-docs.restructure`'s summary and
-  proof to name the settled files above. Not deleted: the task isn't finished, only scoped;
-  it stays in `next`, ahead of `tuning.slot-persistence`.
+- **Integrated:** `context/concepts/reference-restructure.md` — deleted; the split it
+  scoped is now built and validated: `reference/README.md` split into `model-selection.md`
+  and `model-tiers.md`, `reference/config.md` dissolved into `config-presets.md`,
+  `config-convention.md`, `observability.md`, `memory-footprint.md`, and
+  `context-sizing.md`, and every cross-reference into the two dissolved targets repointed
+  — top-level `README.md`, `admin/README.md`, `preparation/framework-desktop.md`,
+  `setup/hosting-setup.md`, and `research/framework-desktop-followups.md`.
+- **Roadmap:** `context/roadmap.toml` — deleted goal `reference-docs` and its task
+  `restructure` (both criteria met, no tasks remain under the goal); `next` advances to
+  `tuning.slot-persistence` alone.
 
 ## Next-focus
-`reference-docs.restructure` — scoped, ready for a `start` session. Execute the split in
-`context/concepts/reference-restructure.md`: author `model-selection.md`, `model-tiers.md`,
-`config-presets.md`, `config-convention.md`, `observability.md`, `memory-footprint.md`, and
-`context-sizing.md` from their mapped sections, reduce `reference/README.md` to overview+
-index over all seven, delete `config.md`, and sweep cross-references (internal links,
-top-level `README.md`, `admin/README.md`). `tuning.slot-persistence` follows after.
+`tuning.slot-persistence` — set `--slot-save-path` to a directory on the dedicated
+model-storage drive and verify a `pi` session survives an intentional `llama-router`
+restart without full reprocessing, per `context/roadmap.toml`'s existing task and the
+"What to try first" section of `research/framework-desktop-followups.md`.

@@ -2,20 +2,8 @@
 # the marathon-roadmap extension; the format is the plugin's references/manifest.md.
 
 next = [
-  "reference-docs.restructure",
   "tuning.slot-persistence",
 ]
-
-[goals.reference-docs]
-name = "Reference documentation restructure"
-summary = "reference/README.md is a short overview and index; the model-selection heuristics and by-tier catalog it currently holds, and reference/config.md's now-five-topic content, live in dedicated files decomposed by concern."
-criteria = ["Every task beneath this goal is closed."]
-context = ["context/concepts/reference-restructure.md"]
-
-[goals.reference-docs.tasks.restructure]
-name = "Split reference/README.md and reference/config.md by concern"
-summary = "Settled split (see context/concepts/reference-restructure.md): README.md's heuristics and by-tier catalog become model-selection.md and model-tiers.md; config.md dissolves into config-presets.md, config-convention.md, observability.md, memory-footprint.md, and context-sizing.md. One session executes the split plus the cross-reference sweep (top-level README.md, admin/README.md)."
-proof = "reference/README.md is overview+index only, linking all seven files directly; config.md no longer exists; every internal and external cross-reference (top-level README.md, admin/README.md) points at the new filenames."
 
 [goals.tuning]
 name = "Framework Desktop context, update, and observability tuning"
