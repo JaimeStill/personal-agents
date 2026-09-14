@@ -20,22 +20,39 @@ gaining a Qwen3-Coder-Next `c` recipe) — each session that touches `reference/
 adding its findings to the right existing file, exactly the pattern this note already
 anticipated below.
 
-## What isn't settled
+## The settled split
 
-- Where the split lines fall in `config.md` — whether it's worth decomposing now or only
-  once it's demonstrably too large.
-- What the model-selection content's new filename(s) should be, and whether "how to reason
-  about it" and "by memory tier" split into two files or stay one.
-- Whether this is one session's work or naturally falls out of the next few sessions that
-  touch `reference/` anyway (each adding its findings to the right file as it goes, per the
-  pattern this session just followed for `config.md`).
+Settled in the `reference-docs.restructure` `plan` session, deliberately rather than
+waiting for it to fall out of ordinary sessions: `tuning.qwen-context-budget`'s `c`-sizing
+findings and `tuning.checkpoint-tuning`'s caching/checkpoint tuning are exactly the kind of
+dense, model-specific result `config.md` and `README.md` needed clearly separated homes
+for.
 
-The architect now considers the split worth doing deliberately rather than waiting for it
-to fall out of ordinary sessions: `tuning.qwen-context-budget`'s `c`-sizing findings and
-`tuning.checkpoint-tuning`'s caching/checkpoint tuning are exactly the kind of dense,
-model-specific result `config.md` and `README.md` need clearly separated homes for, and
-`config.md` has grown past 150 lines across five fairly separate topics (the preset
-mechanism, the propagation convention, observability, memory measurement, context-budget
-sizing, and now caching/checkpoints) since this note was raised. `reference/README.md`'s
-dual role is no longer in question; a `plan` session should settle the concrete split
-(filenames, where the lines fall) before a `start` session executes it.
+`reference/README.md` becomes a short overview and index only, mirroring
+`capabilities/README.md`'s pattern. Its model-selection content splits by concern, since
+the by-tier catalog gains entries far more often than the reasoning changes:
+
+| Current section (`README.md`) | New file |
+|---|---|
+| "How to reason about it" | `reference/model-selection.md` |
+| "By memory tier" | `reference/model-tiers.md` |
+
+`reference/config.md` dissolves entirely into five topic files, one per concern, matching
+`capabilities/`'s one-file-per-topic convention; `reference/README.md`'s index links each
+directly, so no second-level index file is needed:
+
+| Current section (`config.md`) | New file |
+|---|---|
+| "The mechanism: `--models-preset`" + "The limitation: no grouping" | `reference/config-presets.md` |
+| "The convention this repo uses" | `reference/config-convention.md` |
+| "Observability: `--metrics`" | `reference/observability.md` |
+| "Memory footprint: measure with `amdgpu_top`" | `reference/memory-footprint.md` |
+| "Sizing a model's `c`" | `reference/context-sizing.md` |
+
+A `start` session executes this in one pass: the README split, the config.md split, and a
+cross-reference sweep — internal links between the moved content (e.g. the by-tier catalog's
+Gemma recipe, and the context-sizing method's references into model-selection.md and
+memory-footprint.md), the top-level `README.md`'s "Reference" section (currently names
+`reference/config.md` directly), and `admin/README.md`'s three links into `config.md` (the
+`outpost preset install`, `outpost server metrics`, and `outpost amd usage` entries, into
+`config-convention.md`, `observability.md`, and `memory-footprint.md` respectively).
