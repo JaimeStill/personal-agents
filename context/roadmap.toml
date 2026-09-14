@@ -2,20 +2,26 @@
 # the marathon-roadmap extension; the format is the plugin's references/manifest.md.
 
 next = [
-  "tuning.checkpoint-tuning",
+  "reference-docs.restructure",
   "tuning.slot-persistence",
 ]
+
+[goals.reference-docs]
+name = "Reference documentation restructure"
+summary = "reference/README.md is a short overview and index; the model-selection heuristics and by-tier catalog it currently holds, and reference/config.md's now-five-topic content, live in dedicated files decomposed by concern."
+criteria = ["Every task beneath this goal is closed."]
+context = ["context/concepts/reference-restructure.md"]
+
+[goals.reference-docs.tasks.restructure]
+name = "Split reference/README.md and reference/config.md by concern"
+summary = "Not yet scoped — start with a plan session to settle the split (filenames, where config.md's lines fall, one session or several) per context/concepts/reference-restructure.md, then execute it, before further sessions add more findings on top of the current shape."
+proof = "reference/README.md is overview+index only; the by-tier catalog and reasoning heuristics, and config.md's topics, live in their own files, each still reachable from the index."
 
 [goals.tuning]
 name = "Framework Desktop context, update, and observability tuning"
 summary = "The router's context/session behavior, update-restart path, and observability are tuned and verified against real measurements on the Framework Desktop host."
 criteria = ["Every task beneath this goal is closed."]
 context = ["research/framework-desktop-followups.md"]
-
-[goals.tuning.tasks.checkpoint-tuning]
-name = "Tune --checkpoint-min-step for pi's prune/reorder pattern"
-summary = "--cache-reuse is confirmed dead in this build (tuning.cache-reuse-tuning); --ctx-checkpoints is the only mechanism actually providing non-prefix reuse, untested at a smaller --checkpoint-min-step than the 8192-token default. Reuse the scripted /v1/chat/completions prefix-break comparison (same-slot pinned) against a tuned spacing."
-proof = "The same scripted prefix-break comparison shows non-zero cached_tokens/cache_n and a measurable drop in prompt_ms at a tuned --checkpoint-min-step, versus the near-zero reuse measured at the default spacing this session."
 
 [goals.tuning.tasks.slot-persistence]
 name = "Persist slot KV cache across router restarts"
