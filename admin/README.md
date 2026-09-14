@@ -1,8 +1,9 @@
 # outpost
 
 Administration tooling for this repository's `llama-router` setup: applying a profile and
-managing the systemd service, querying the router's HTTP API, and reading the host's GPU
-usage — see [`../context/roadmap.toml`](../context/roadmap.toml) for what's planned next.
+managing the systemd service, installing the pacman restart hook, querying the router's
+HTTP API, and reading the host's GPU usage — see
+[`../context/roadmap.toml`](../context/roadmap.toml) for what's planned next.
 
 ## The name
 
