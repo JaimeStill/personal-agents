@@ -234,9 +234,9 @@ WantedBy=multi-user.target
 ```
 
 `ExecStart` runs `llama-server` through the `current` symlink, so moving to another build
-never edits the unit. `--host` resolves the tailnet IP at start time via `$(tailscale ip -4)` inside a shell
-wrapper, rather than a hardcoded address, so the unit keeps working if the tailnet IP ever
-changes. `Requires=`/`After=tailscaled.service` ensures Tailscale is already up before the
+never edits the unit. `--host` resolves the tailnet IP at start time via
+`$(tailscale ip -4)` inside a shell wrapper, rather than a hardcoded address, so the unit
+keeps working if the tailnet IP ever changes. `Requires=`/`After=tailscaled.service` ensures Tailscale is already up before the
 router tries to bind to it.
 
 Install and enable it:
