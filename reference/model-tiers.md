@@ -135,14 +135,6 @@ Measured on b11529, the probability of `final` as the first channel after a tool
 from 0.84 to under 0.01 on one of clutch's conformance prompts, and from 0.41 to 0.03 on
 another. The path in the preset is the host's checkout of this repository.
 
-The recipe also sets `reasoning-effort = high`, up from the template's `medium`. The failure
-starts with gpt-oss skipping a fresh analysis after a tool result, and how likely that is
-depends on the harness: Pi sends the earlier reasoning back in `reasoning_content`, while
-OpenCode sends none. At `medium`, the template change alone fixed Pi's tool calls but left
-its skill exchange failing 1 in 3, and broke OpenCode's skill and audio-tool exchanges. At
-`high`, gpt-oss reasons first on every prompt measured, under either harness, with either
-template. A request's own `reasoning_effort` still overrides it.
-
 On unified memory, the estimate above isn't the binding test: with all four loaded and
 four requests in flight on each, `outpost amd usage` has to show at least 3GiB of the
 96GiB pool free (see [`model-selection.md`](model-selection.md)).
@@ -151,7 +143,6 @@ four requests in flight on each, `outpost amd usage` has to show at least 3GiB o
 [ggml-org/gpt-oss-120b-GGUF:MXFP4]
 c = 131072
 chat-template-file = /home/jaime/personal-agents/profiles/chat-templates/gpt-oss-120b.jinja
-reasoning-effort = high
 
 [ggml-org/gemma-4-26B-A4B-it-GGUF:Q4_0]
 c = 32768
