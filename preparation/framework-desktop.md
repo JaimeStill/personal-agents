@@ -61,7 +61,8 @@ took real troubleshooting, so the detail here is worth keeping even after it's w
 
 ## Also worth knowing
 
-- Backend: Vulkan (`ggml-vulkan`), not ROCm. Model in active use:
+- Backend: Vulkan, not ROCm: upstream llama.cpp's Vulkan x64 release, build b11529, in
+  `/opt/llama.cpp/` per [`setup/hosting-setup.md`](../setup/hosting-setup.md#install). Model in active use:
   `unsloth/Qwen3-Coder-Next-GGUF:Q5_K_M` (~53GB); `gpt-oss-120b` (MXFP4, ~59GB) is a
   fallback if the chat template misbehaves.
 - `/dev/dri/renderD128` (the Vulkan compute node) is world-read/write by default on this
@@ -78,5 +79,6 @@ took real troubleshooting, so the detail here is worth keeping even after it's w
   preset install unified-96gb` symlinks it into `/etc/llama-router/models.ini`; `outpost
   service restart` restarts the service after a change — see
   [`../admin/README.md`](../admin/README.md).
-- Package versions current as of this setup (September 2026): `llama-cpp` 0.4.0-1,
-  `ggml-vulkan` 0.23.0-2, `amd-debug-tools` 0.2.21-1, `tailscale` 1.102.3-1.
+- Package versions current as of this setup (September 2026): `amd-debug-tools` 0.2.21-1,
+  `tailscale` 1.102.3-1. Arch's `llama-cpp` 0.4.0-1 (build 10809) and `ggml-vulkan`
+  0.23.0-2 ran the router until October 2026, when upstream's release replaced them.

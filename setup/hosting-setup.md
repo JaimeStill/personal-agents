@@ -29,19 +29,69 @@ default.
 
 ## Install
 
-Install `llama-server` with a GPU backend for your hardware. On Arch/Omarchy:
+Install `llama-server` from upstream's own prebuilt release, not a distro package. Every
+upstream build is tagged `b<number>` on
+[llama.cpp's releases](https://github.com/ggml-org/llama.cpp/releases), and the Vulkan x64
+asset, `llama-<tag>-bin-ubuntu-vulkan-x64.tar.gz`, carries `llama-server`, every `libggml*`
+backend, and its own `libllama*` libraries. Its binaries resolve their libraries from their
+own directory (`RUNPATH=$ORIGIN`), so the only system library it needs is the Vulkan
+loader (`libvulkan.so.1`, from `vulkan-icd-loader`) and the GPU's Vulkan driver (Mesa's
+`vulkan-radeon` on AMD), both already present on a desktop. The Ubuntu build runs on
+Arch/Omarchy as it is. Arch's own `llama-cpp`, `ggml`, and `ggml-vulkan` packages trail
+upstream by weeks and aren't installed alongside it.
 
-```bash
-omarchy pkg add llama-cpp
-omarchy pkg add ggml-vulkan   # or ggml-cuda, ggml-hip, etc., per your GPU
+The build in use is **b11529**.
+
+Each build goes in its own versioned directory under `/opt/llama.cpp/`, and a `current`
+symlink names the one the service runs:
+
+```
+/opt/llama.cpp/
+├── b11529/              # one extracted release, untouched
+│   ├── llama-server
+│   └── libggml-vulkan.so, libllama.so.0, ...
+└── current -> b11529    # the systemd unit runs /opt/llama.cpp/current/llama-server
 ```
 
-The GPU backend is a separate optional package from the base `llama-cpp`/`ggml` install.
-Without it, `llama-server` only has a CPU backend. Confirm the GPU is visible:
+Install a build, checking the archive against the SHA-256 digest GitHub publishes for the
+asset:
 
 ```bash
-llama-server --list-devices
+tag=b11529
+asset="llama-${tag}-bin-ubuntu-vulkan-x64.tar.gz"
+digest=$(gh api "repos/ggml-org/llama.cpp/releases/tags/${tag}" \
+  --jq ".assets[] | select(.name == \"${asset}\") | .digest | sub(\"^sha256:\"; \"\")")
+curl -fLO "https://github.com/ggml-org/llama.cpp/releases/download/${tag}/${asset}"
+echo "${digest}  ${asset}" | sha256sum -c
+sudo mkdir -p "/opt/llama.cpp/${tag}"
+sudo tar xzf "${asset}" -C "/opt/llama.cpp/${tag}" --strip-components=1 --no-same-owner
+sudo ln -sfn "${tag}" /opt/llama.cpp/current
 ```
+
+Confirm the build and that the GPU is visible:
+
+```bash
+/opt/llama.cpp/current/llama-server --version        # version: ... (build 11529, ...)
+/opt/llama.cpp/current/llama-server --list-devices   # expect a Vulkan0 device
+```
+
+### Updating to a newer build
+
+Find the newest `b<number>` tag (upstream also publishes semver tags such as `v0.6.0`; skip
+them), install it with the steps above, and restart the service:
+
+```bash
+gh api 'repos/ggml-org/llama.cpp/releases?per_page=30' \
+  --jq '[.[] | select(.tag_name | test("^b[0-9]+$"))][0].tag_name'
+# install that tag as above, which repoints `current` at it, then:
+sudo systemctl restart llama-router
+```
+
+No system update ever replaces the binary underneath the service: a build changes only when
+`current` is repointed, and the restart that follows is part of that same step. Rolling back
+means pointing `current` at the previous directory and restarting again. Remove an old build's
+directory once it's no longer a rollback target. Update the build named in this doc whenever
+`current` moves.
 
 ## Model storage
 
@@ -175,7 +225,7 @@ Requires=tailscaled.service
 Environment=HF_HOME=/path/to/dedicated/storage/hf-cache
 Type=simple
 User=<user>
-ExecStart=/usr/bin/bash -c 'exec /usr/bin/llama-server --models-dir /home/<user>/models --no-models-autoload --host $(tailscale ip -4) --port 8080 --models-preset /path/to/models.ini'
+ExecStart=/usr/bin/bash -c 'exec /opt/llama.cpp/current/llama-server --models-dir /home/<user>/models --no-models-autoload --host $(tailscale ip -4) --port 8080 --models-preset /path/to/models.ini'
 Restart=on-failure
 RestartSec=5
 
@@ -183,7 +233,8 @@ RestartSec=5
 WantedBy=multi-user.target
 ```
 
-`--host` resolves the tailnet IP at start time via `$(tailscale ip -4)` inside a shell
+`ExecStart` runs `llama-server` through the `current` symlink, so moving to another build
+never edits the unit. `--host` resolves the tailnet IP at start time via `$(tailscale ip -4)` inside a shell
 wrapper, rather than a hardcoded address, so the unit keeps working if the tailnet IP ever
 changes. `Requires=`/`After=tailscaled.service` ensures Tailscale is already up before the
 router tries to bind to it.
