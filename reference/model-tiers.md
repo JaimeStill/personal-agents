@@ -126,15 +126,47 @@ On unified memory, the estimate above isn't the binding test: with all four load
 four requests in flight on each, `outpost amd usage` has to show at least 3GiB of the
 96GiB pool free (see [`model-selection.md`](model-selection.md)).
 
+The rule for every set-A model: it runs its official embedded chat template, never a
+patched copy, at the sampling its model card recommends, with no reasoning effort set (the
+template's default). A shape a client needs every time, such as a mandatory tool call or a
+JSON reply, is constrained by the client per request (`tool_choice` `"required"` or a named
+tool, `response_format` with a strict `json_schema`), which the server enforces with a
+grammar; the preset doesn't work around a model's habits.
+
+- **gpt-oss-120b**: `temperature=1.0`, `top_p=1.0`, from the
+  [openai/gpt-oss README](https://github.com/openai/gpt-oss), "Recommended Sampling
+  Parameters". Its GGUF carries no `general.sampling.*` keys, so without the preset's keys
+  the server's defaults apply (`temp` 0.8, `top-k` 40, `top-p` 0.95, `min-p` 0.05 on
+  b11529). `top-k = 0` and `min-p = 0` turn off the truncations the card doesn't name.
+- **Gemma 4 26B-A4B** and **gemma-4-E4B**: `temperature=1.0`, `top_p=0.95`, `top_k=64`, from
+  the [26B-A4B](https://huggingface.co/google/gemma-4-26B-A4B-it) and
+  [E4B](https://huggingface.co/google/gemma-4-E4B-it) cards, "1. Sampling Parameters".
+  b11529 already applies those three from the GGUFs' `general.sampling.*` keys (visible in
+  `/props`' `default_generation_settings`); the preset states them so the card is the source
+  rather than the conversion, and sets `min-p = 0` because the card names none.
+- **EmbeddingGemma 2**: none; an embedding model doesn't sample.
+
 ```ini
 [ggml-org/gpt-oss-120b-GGUF:MXFP4]
 c = 131072
+temp = 1.0
+top-p = 1.0
+top-k = 0
+min-p = 0
 
 [ggml-org/gemma-4-26B-A4B-it-GGUF:Q4_0]
 c = 32768
+temp = 1.0
+top-p = 0.95
+top-k = 64
+min-p = 0
 
 [ggml-org/gemma-4-E4B-it-GGUF:Q8_0]
 c = 32768
+temp = 1.0
+top-p = 0.95
+top-k = 64
+min-p = 0
 
 [ggml-org/embeddinggemma-2-GGUF:Q8_0]
 embeddings = true
