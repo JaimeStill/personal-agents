@@ -10,5 +10,8 @@ That real figure also confirms `--kv-unified`'s sizing behavior directly: gpt-os
 `total_slots: 1` (`-np 1`, tested transiently against a scratch copy of the profile, never
 committed) — a 12MB difference, noise against a 61G footprint. The shared KV pool is sized
 to `-c` total, not `-c × slots`; slot count carries no meaningful memory cost on this
-hardware. `-np` stays at auto in `profiles/*.ini` for this reason — pinning it would trade
-away the ability to run a second concurrent `pi` session for no memory savings.
+hardware. Fewer slots would trade away concurrent requests (a second `pi` session, or a
+consumer beside it) for no memory savings, so
+[`../profiles/unified-96gb.ini`](../profiles/unified-96gb.ini) keeps the 4 slots auto
+picked, pinned as `parallel = 4` with `kv-unified = true` — an explicit `parallel` turns
+`--kv-unified`'s auto default off, so the two are set together.
