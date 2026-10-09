@@ -13,7 +13,8 @@ Every GGUF named is a [ggml-org](https://huggingface.co/ggml-org) conversion —
 own organization — unless noted, and the section IDs in the recipes are the router's
 `<repo>:<quant>` names for them (see [`config-presets.md`](config-presets.md)). Each
 conversion carries its model's own Jinja chat template, which `[*]`'s `jinja = true`
-applies; none of these recipes overrides it.
+applies. One recipe overrides it: gpt-oss-120b's in the ~90-96GB tier, whose embedded
+template renders an earlier tool call in a form the model answers badly (see that tier).
 
 ## 8GB
 
@@ -122,6 +123,18 @@ each model's GGUF metadata:
   dimensions; the repository's `mmproj` (image and audio encoders) is kept out with
   `no-mmproj = true`, and `b`/`ub` match `c` so an input fits in one physical batch.
 
+gpt-oss-120b's recipe also sets `chat-template-file` to
+[`../profiles/chat-templates/gpt-oss-120b.jinja`](../profiles/chat-templates/gpt-oss-120b.jinja):
+the template the GGUF embeds, with one change. The embedded template renders an earlier
+tool call as `<|start|>assistant to=functions.NAME<|channel|>commentary json<|message|>`,
+without harmony's `<|constrain|>`. After that history, gpt-oss often answers a tool result
+with `<|channel|>final <|constrain|>...` instead of a tool call, which llama.cpp's gpt-oss
+parser rejects ("does not match the expected peg-native format"). The copy renders the call
+as the model itself emits one, `<|channel|>commentary to=functions.NAME <|constrain|>json`.
+Measured on b11529, the probability of `final` as the first channel after a tool result fell
+from 0.84 to under 0.01 on one of clutch's conformance prompts, and from 0.41 to 0.03 on
+another. The path in the preset is the host's checkout of this repository.
+
 On unified memory, the estimate above isn't the binding test: with all four loaded and
 four requests in flight on each, `outpost amd usage` has to show at least 3GiB of the
 96GiB pool free (see [`model-selection.md`](model-selection.md)).
@@ -129,6 +142,7 @@ four requests in flight on each, `outpost amd usage` has to show at least 3GiB o
 ```ini
 [ggml-org/gpt-oss-120b-GGUF:MXFP4]
 c = 131072
+chat-template-file = /home/jaime/personal-agents/profiles/chat-templates/gpt-oss-120b.jinja
 
 [ggml-org/gemma-4-26B-A4B-it-GGUF:Q4_0]
 c = 32768
