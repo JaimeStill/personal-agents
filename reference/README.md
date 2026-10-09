@@ -16,6 +16,7 @@ model has since emerged. Not a setup step; see [`../setup/`](../setup/) for that
 - [`observability.md`](observability.md) — the `--metrics` endpoint and per-request
   cache/timing detail.
 - [`memory-footprint.md`](memory-footprint.md) — measuring real GPU memory use with
-  `amdgpu_top` on unified-memory hardware.
+  `amdgpu_top` on unified-memory hardware, and set A's measured footprint: the binding
+  memory test on unified memory.
 - [`context-sizing.md`](context-sizing.md) — the method for sizing a model's `c` against
   its trained context and the host's memory.

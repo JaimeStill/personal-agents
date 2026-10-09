@@ -111,7 +111,8 @@ each model's GGUF metadata:
   trained context is `262144`, so the shared budget binds, not the training. It's the
   `c` that drops first when the measured margin falls short, and it did: at `c = 65536`,
   all four loaded with four requests in flight on each left 2.61GiB of the pool free,
-  under the 3GiB bar. At `c = 32768` the set passes.
+  under the 3GiB bar. At `c = 32768` the set passes with 3.30GiB free (see
+  [`memory-footprint.md`](memory-footprint.md#set-a-measured)).
 - **gemma-4-E4B**: 42 layers, 7 of them full-attention, and the last 18 layers reuse
   earlier layers' KV (`shared_kv_layers = 18`) — so 4 full-attention layers hold their own
   cache, at `(512+512) × 2 × 2 = 4,096 bytes/token` each: 16,384 bytes/token. Trained
