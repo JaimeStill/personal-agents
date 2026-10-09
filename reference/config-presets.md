@@ -1,7 +1,7 @@
 # Model configuration: the preset mechanism
 
 The specification for how per-model configuration works in this repository. See
-[`README.md`](README.md) for *which* model and *what* it needs; see
+[`model-tiers.md`](model-tiers.md) for *which* model and *what* it needs; see
 [`config-convention.md`](config-convention.md) for the convention this repo layers on top
 of this mechanism.
 

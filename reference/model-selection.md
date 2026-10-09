@@ -14,6 +14,13 @@ budget, see [`model-tiers.md`](model-tiers.md).
 for weights plus KV cache; the rest goes to the OS, drivers, and other overhead. A model
 whose weights alone consume the full budget leaves no room for context.
 
+That 85-90% is the planning estimate. On unified memory (a GTT pool, as on a Strix Halo
+host), the binding test is measured: with every model in the profile loaded and four
+requests in flight on each, `outpost amd usage` (see
+[`memory-footprint.md`](memory-footprint.md)) shows at least 3GiB of the pool free. A
+profile that passes the estimate but fails the measurement is over budget: shrink the `c`
+its recipes name as the first to drop, and measure again.
+
 **Dense vs. mixture-of-experts (MoE) isn't a universal win for MoE.** MoE's efficiency
 edge (a large total footprint, but only a few billion parameters active per token) is
 scale-dependent, not automatic. At small total sizes a well-trained dense model can match

@@ -13,8 +13,8 @@ context = ["research/framework-desktop-followups.md"]
 
 [goals.tuning.tasks.slot-persistence]
 name = "Persist slot KV cache across router restarts"
-summary = "Set --slot-save-path to a directory on the dedicated model-storage drive and verify a pi session survives an intentional llama-router restart without full reprocessing."
-proof = "A pi session's next turn after a deliberate `systemctl restart llama-router` shows reduced prompt eval versus a cold reload."
+summary = "Set --slot-save-path to a directory on the dedicated model-storage drive and verify a pi session on gpt-oss-120b (ggml-org/gpt-oss-120b-GGUF:MXFP4) survives an intentional llama-router restart without full reprocessing."
+proof = "A pi session on gpt-oss-120b, on its next turn after a deliberate `systemctl restart llama-router`, shows reduced prompt eval versus a cold reload."
 
 [backlog.gateway-proxy]
 name = "Gateway/proxy in front of the router"

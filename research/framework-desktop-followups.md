@@ -12,7 +12,7 @@ time of writing.
 ## Current state, for reference
 
 The router (`llama-router.service`) runs `llama-server --models-dir /home/jaime/models
---no-models-autoload --host 100.87.194.83 --port 8080 --models-preset
+--no-models-autoload --host <tailnet-ip> --port 8080 --models-preset
 /etc/llama-router/models.ini`, per `setup/hosting-setup.md`. At the time of this
 investigation it had `unsloth/gpt-oss-120b-GGUF:Q4_K_M` loaded (not Qwen3-Coder); see
 [`../reference/memory-footprint.md`](../reference/memory-footprint.md) for its real

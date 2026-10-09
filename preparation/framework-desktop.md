@@ -62,9 +62,12 @@ took real troubleshooting, so the detail here is worth keeping even after it's w
 ## Also worth knowing
 
 - Backend: Vulkan, not ROCm: upstream llama.cpp's Vulkan x64 release, build b11529, in
-  `/opt/llama.cpp/` per [`setup/hosting-setup.md`](../setup/hosting-setup.md#install). Model in active use:
-  `unsloth/Qwen3-Coder-Next-GGUF:Q5_K_M` (~53GB); `gpt-oss-120b` (MXFP4, ~59GB) is a
-  fallback if the chat template misbehaves.
+  `/opt/llama.cpp/` per [`setup/hosting-setup.md`](../setup/hosting-setup.md#install).
+  Models in active use are set A, loaded side by side: `gpt-oss-120b`
+  (`ggml-org/gpt-oss-120b-GGUF:MXFP4`, ~59GiB), the model `pi` sessions run on; Gemma 4
+  26B-A4B for vision; gemma-4-E4B for audio; and EmbeddingGemma 2 for embeddings. See
+  [`../reference/model-tiers.md`](../reference/model-tiers.md#90-96gb-unified-memory) for
+  each one's recipe and context size.
 - `/dev/dri/renderD128` (the Vulkan compute node) is world-read/write by default on this
   device, so no `render`/`video` group changes were needed. Check this on another device
   before assuming the same.
