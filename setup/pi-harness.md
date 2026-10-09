@@ -53,11 +53,12 @@ model…** searches Hugging Face (or accepts an exact `owner/repository[:quant]`
 directly) and has the *host* download it, not the remote. For example, entering:
 
 ```
-unsloth/Qwen3-Coder-Next-GGUF:Q5_K_M
+ggml-org/gpt-oss-120b-GGUF:MXFP4
 ```
 
-downloads that model to the host, then offers to load it once the download finishes. Once
-a model is loaded, run:
+downloads gpt-oss-120b — the model `pi` runs on with the host's profile (see
+[`../reference/model-tiers.md`](../reference/model-tiers.md#90-96gb-unified-memory)) — to
+the host, then offers to load it once the download finishes. Once a model is loaded, run:
 
 ```
 /model

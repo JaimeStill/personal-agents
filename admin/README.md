@@ -1,8 +1,8 @@
 # outpost
 
 Administration tooling for this repository's `llama-router` setup: applying a profile and
-managing the systemd service, installing the pacman restart hook, querying the router's
-HTTP API, and reading the host's GPU usage — see
+managing the systemd service, querying the router's HTTP API, and reading the host's GPU
+usage — see
 [`../context/roadmap.toml`](../context/roadmap.toml) for what's planned next.
 
 ## The name
@@ -36,9 +36,6 @@ the same way:
   way to see what `llama-server` actually holds on unified-memory hardware, where
   `ps`/`free`-style RSS reads far too low. See
   [`../reference/memory-footprint.md`](../reference/memory-footprint.md).
-- `outpost hooks install` (`outpost-hooks-install`) — symlinks every pacman hook in
-  [`../hooks/`](../hooks/) into `/etc/pacman.d/hooks/`, the same tracked-file-symlinked-
-  into-place pattern `outpost preset install` uses for `profiles/`.
 
 ## Adding a command
 
@@ -50,5 +47,6 @@ still works once it's symlinked elsewhere by `install.sh`.
 ## Installing
 
 `./install.sh` symlinks everything in `bin/` into `~/.local/bin`, so the commands are
-callable from anywhere without `admin/bin/` on your `PATH` directly. Re-run it after
-pulling a change that adds or renames a command.
+callable from anywhere without `admin/bin/` on your `PATH` directly, and removes the links
+of commands that no longer exist. Re-run it after pulling a change that adds, renames, or
+retires a command.

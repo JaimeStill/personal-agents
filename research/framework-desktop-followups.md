@@ -12,7 +12,7 @@ time of writing.
 ## Current state, for reference
 
 The router (`llama-router.service`) runs `llama-server --models-dir /home/jaime/models
---no-models-autoload --host 100.87.194.83 --port 8080 --models-preset
+--no-models-autoload --host <tailnet-ip> --port 8080 --models-preset
 /etc/llama-router/models.ini`, per `setup/hosting-setup.md`. At the time of this
 investigation it had `unsloth/gpt-oss-120b-GGUF:Q4_K_M` loaded (not Qwen3-Coder); see
 [`../reference/memory-footprint.md`](../reference/memory-footprint.md) for its real
@@ -161,6 +161,15 @@ each right after a fresh restart and model load.
 
 ## Updating llama.cpp
 
+> **Superseded (October 2026):** the router no longer runs Arch's packages. It runs
+> upstream's Vulkan release from a versioned directory under `/opt/llama.cpp/`, updated by
+> hand, restart included — see
+> [`../setup/hosting-setup.md`](../setup/hosting-setup.md#updating-to-a-newer-build). The
+> packages and the pacman hook described below are removed from the host, and the hook and
+> its `outpost` install command are retired from this repository. The findings stay as the
+> record of why the packaged path was set aside: it trailed upstream by about a hundred
+> builds.
+
 `llama-cpp`, `ggml`, and `ggml-vulkan` are ordinary packages in Arch's official `extra`
 repository. Updating them means running `omarchy update`, the same command used for every
 other system package, with no separate installer or vendored build involved. A restart is a
@@ -209,9 +218,9 @@ routine this project settles on for updates, since nothing will remind you it's 
 
 A pacman hook (`/etc/pacman.d/hooks/`) closes this gap without needing to remember it, and
 does so precisely — it only fires when one of the named packages is actually part of the
-transaction, not on every `omarchy update` run. It's tracked in this repo at
-[`../hooks/llama-router-restart.hook`](../hooks/llama-router-restart.hook) and installed
-with `outpost hooks install` (`../admin/README.md`):
+transaction, not on every `omarchy update` run. It was tracked in this repo as
+`hooks/llama-router-restart.hook` and installed with `outpost hooks install`, both since
+retired:
 
 ```ini
 [Trigger]
@@ -306,6 +315,6 @@ investigation.
 
 **Set `--slot-save-path`** to a directory on the dedicated model-storage drive and verify a
 `pi` session survives an intentional `systemctl restart llama-router` without full
-reprocessing — this is also the piece that makes the restart after every `llama-cpp` update
-(now automatic — see "Updating llama.cpp" above) cheap instead of disruptive. Not attempted
+reprocessing — this is also the piece that makes the restart after every llama.cpp update
+(see "Updating llama.cpp" above) cheap instead of disruptive. Not attempted
 yet (`tuning.slot-persistence`).
