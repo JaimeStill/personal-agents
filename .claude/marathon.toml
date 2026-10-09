@@ -5,3 +5,4 @@ extensions = ["marathon-roadmap"]
 [remote]
 platform = "github"
 publish  = "gh pr create"
+merge    = "gh pr merge --merge --delete-branch"
