@@ -12,9 +12,9 @@ gives the pool itself (`GTT used/total MiB`); the router runs each loaded model 
 This is the measured test from [`model-selection.md`](model-selection.md)'s "Usable
 memory, not raw memory". The setup:
 [`../profiles/unified-96gb.ini`](../profiles/unified-96gb.ini)'s four models, all loaded on
-llama.cpp b11529 (Vulkan), with 0, 1, and then 4 requests in flight on each model (`/slots` confirmed the counts; the embedding model's requests finish
-fast enough that 3 of its 4 were in flight at the sample). All figures are `VRAM + GTT`,
-in MiB:
+llama.cpp b11529 (Vulkan), with 0, 1, and then 4 requests in flight on each model.
+`/slots` confirmed the counts; the embedding model's requests finish fast enough that 3 of
+its 4 were in flight at the sample. All figures are `VRAM + GTT`, in MiB:
 
 | Model | `c` | 0 in flight | 1 in flight | 4 in flight |
 |---|---|---|---|---|
