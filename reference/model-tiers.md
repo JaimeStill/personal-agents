@@ -92,7 +92,7 @@ one KV pool (`parallel = 4`, `kv-unified = true` in `[*]`):
 | Model | Role | Quant (~size) | `c` | KV bytes/token | KV at `c` |
 |---|---|---|---|---|---|
 | gpt-oss-120b | harness (`pi`), tool calls | `MXFP4` (~59GiB) | 131072 | 36,864 | 4.5GiB |
-| Gemma 4 26B-A4B | vision | `Q4_0` + `Q8_0` mmproj (~14.4GiB) | 65536 | 20,480 | 1.25GiB |
+| Gemma 4 26B-A4B | vision | `Q4_0` + `Q8_0` mmproj (~14.4GiB) | 32768 | 20,480 | 0.625GiB |
 | gemma-4-E4B | audio | `Q8_0` + `Q8_0` mmproj (~8.0GiB) | 32768 | 16,384 | 0.5GiB |
 | EmbeddingGemma 2 | text embeddings | `Q8_0` (~0.3GiB) | 8192 | — | small |
 
@@ -108,9 +108,10 @@ each model's GGUF metadata:
   set to it.
 - **Gemma 4 26B-A4B**: 30 layers, 5 of them full-attention with `head_count_kv = 2` and
   `key_length = value_length = 512`: `(512+512) × 2 × 2 × 5 = 20,480 bytes/token`. Its
-  trained context is `262144`; `c = 65536` is what the shared budget affords alongside
-  gpt-oss-120b. If the measured margin falls short, this is the `c` that drops (to 32768)
-  first.
+  trained context is `262144`, so the shared budget binds, not the training. It's the
+  `c` that drops first when the measured margin falls short, and it did: at `c = 65536`,
+  all four loaded with four requests in flight on each left 2.61GiB of the pool free,
+  under the 3GiB bar. At `c = 32768` the set passes.
 - **gemma-4-E4B**: 42 layers, 7 of them full-attention, and the last 18 layers reuse
   earlier layers' KV (`shared_kv_layers = 18`) — so 4 full-attention layers hold their own
   cache, at `(512+512) × 2 × 2 = 4,096 bytes/token` each: 16,384 bytes/token. Trained
@@ -129,7 +130,7 @@ four requests in flight on each, `outpost amd usage` has to show at least 3GiB o
 c = 131072
 
 [ggml-org/gemma-4-26B-A4B-it-GGUF:Q4_0]
-c = 65536
+c = 32768
 
 [ggml-org/gemma-4-E4B-it-GGUF:Q8_0]
 c = 32768
