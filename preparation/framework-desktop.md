@@ -22,20 +22,24 @@ took real troubleshooting, so the detail here is worth keeping even after it's w
 2. **Install `amd-debug-tools` and set the GTT ceiling:**
    ```bash
    omarchy pkg add amd-debug-tools
-   sudo amd-ttm --set 96
+   sudo amd-ttm --set 112
    ```
    This queues the change rather than applying it — it writes `options ttm
-   pages_limit=25165824` to `/etc/modprobe.d/ttm.conf`, which only takes effect the next
-   time the `ttm` kernel module loads, at early boot (step 4).
+   pages_limit=29360128` to `/etc/modprobe.d/ttm.conf`, which only takes effect the next
+   time the `ttm` kernel module loads, at early boot (step 4). 112 is the most `amd-ttm` sets
+   without warning: above 90% of RAM it asks first, since a GPU filling memory can starve the
+   host. The ceiling was 96 until 2026-10-27, when spike-model-engines raised it to bring the
+   GPU's reach closer to the GB10's; clearing both options instead drops it to the kernel's
+   default of half of RAM, about 62.5 GiB.
 
 3. **Add the matching `amdgpu` parameter by hand:**
    ```bash
-   echo 'options amdgpu gttsize=98304' | sudo tee /etc/modprobe.d/amdgpu.conf
+   echo 'options amdgpu gttsize=114688' | sudo tee /etc/modprobe.d/amdgpu.conf
    ```
    `ttm.pages_limit` (step 2) is a ceiling shared by the whole TTM subsystem; `gttsize` is
    what `amdgpu` itself actually *advertises* to userspace (Vulkan, and so `llama-server
    --list-devices`) as available memory. It has to match the ceiling, or `amdgpu` gets
-   clamped or hits allocation failures. 96GB × 1024 = 98304 MB.
+   clamped or hits allocation failures. 112 × 1024 = 114688 MiB.
 
 4. **Rebuild the boot image with `limine-mkinitcpio`, then reboot:**
    ```bash
@@ -52,14 +56,20 @@ took real troubleshooting, so the detail here is worth keeping even after it's w
 
 5. **Verify:**
    ```bash
-   cat /sys/module/ttm/parameters/pages_limit      # expect 25165824
-   sudo cat /sys/module/amdgpu/parameters/gttsize  # expect 98304
-   llama-server --list-devices                     # expect ~98.8GB total, ~98.1GB free
+   cat /sys/module/ttm/parameters/pages_limit      # expect 29360128
+   sudo cat /sys/module/amdgpu/parameters/gttsize  # expect 114688
+   llama-server --list-devices                     # expect Vulkan0 115200 MiB total
    ```
-   The small gap between the requested 96GB and the reported ~98.8GB is the 512MB BIOS
-   reservation added on top of the GTT pool.
+   Vulkan's 115200 MiB is the 112 GiB pool plus the 512 MB BIOS reservation; ROCm reports the
+   pool alone, 114688 MiB.
 
 ## Also worth knowing
+
+- Since 2026-10-27 spike-model-engines' Strix sessions own this host: the router below is
+  stopped and disabled (`sudo systemctl enable --now llama-router` brings it back), `jaime` is
+  in the `docker` group with Docker enabled, and ufw routes ports 8080 and 8000 on
+  `tailscale0` to containers. Its llama.cpp guide, "Framework, in a container", lists each
+  step with its removal.
 
 - Backend: Vulkan, not ROCm: upstream llama.cpp's Vulkan x64 release, build b11529, in
   `/opt/llama.cpp/` per [`setup/hosting-setup.md`](../setup/hosting-setup.md#install).
