@@ -1,4 +1,7 @@
 #!/bin/bash
+# Superseded by spike-model-engines' llama.cpp guide:
+# https://github.com/JaimeStill/spike-model-engines/tree/main/docs/engines/llama.cpp
+#
 # Symlinks profiles/<tier>.ini into the location the llama-router systemd
 # unit reads it from. Re-run any time after pulling changes to this repo, or
 # to switch which profile a host uses; safe to run repeatedly.

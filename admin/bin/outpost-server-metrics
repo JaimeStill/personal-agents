@@ -1,4 +1,7 @@
 #!/bin/bash
+# Superseded by spike-model-engines' llama.cpp guide:
+# https://github.com/JaimeStill/spike-model-engines/tree/main/docs/engines/llama.cpp
+#
 # Formats GET /metrics?model=<id> (Prometheus exposition) into a compact
 # summary. The model id is mandatory - a request without ?model= 400s, and
 # there's no auto-detection even when only one model is loaded (deliberate:

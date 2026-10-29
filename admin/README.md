@@ -1,5 +1,7 @@
 # outpost
 
+> **Superseded** by spike-model-engines' [llama.cpp guide](https://github.com/JaimeStill/spike-model-engines/tree/main/docs/engines/llama.cpp).
+
 Administration tooling for this repository's `llama-router` setup: applying a profile and
 managing the systemd service, querying the router's HTTP API, and reading the host's GPU
 usage — see

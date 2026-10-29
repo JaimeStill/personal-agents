@@ -1,4 +1,7 @@
 #!/bin/bash
+# Superseded by spike-model-engines' llama.cpp guide:
+# https://github.com/JaimeStill/spike-model-engines/tree/main/docs/engines/llama.cpp
+#
 # Thin wrapper over `amdgpu_top -p` - a single-shot per-process VRAM/GTT
 # dump, not the continuous TUI modes. This is the exact command
 # reference/memory-footprint.md tells a reader to run by hand: on

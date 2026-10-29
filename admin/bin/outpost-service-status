@@ -1,4 +1,7 @@
 #!/bin/bash
+# Superseded by spike-model-engines' llama.cpp guide:
+# https://github.com/JaimeStill/spike-model-engines/tree/main/docs/engines/llama.cpp
+#
 # Shows llama-router's systemd status and a quick /health check. No sudo
 # needed — systemctl status is readable without it.
 set -euo pipefail

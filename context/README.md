@@ -19,8 +19,8 @@ steps.
 - **Repository layout** — done. `reference/`, `admin/`, and `profiles/` separate
   host-agnostic reference content, admin tooling, and per-capability-tier config;
   `models/` is retired. [`roadmap.toml`](roadmap.toml) goal `models-layout`.
-- **Context, update, and observability tuning** — in progress, follows the layout goal.
-  [`roadmap.toml`](roadmap.toml) goal `tuning`, findings in
-  [`research/framework-desktop-followups.md`](../research/framework-desktop-followups.md).
+- **Context, update, and observability tuning** — dropped on 2026-10-29: the router it tuned is
+  retired, and the Framework serves set A from spike-model-engines' llama container. Findings
+  stay in [`research/framework-desktop-followups.md`](../research/framework-desktop-followups.md).
 - **Future capabilities** — tracked, no current trigger. [`capabilities/`](../capabilities/),
   [`roadmap.toml`](roadmap.toml) `backlog`.
