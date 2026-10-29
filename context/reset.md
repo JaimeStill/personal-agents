@@ -17,7 +17,6 @@
   `tuning.slot-persistence` alone.
 
 ## Next-focus
-`tuning.slot-persistence` — set `--slot-save-path` to a directory on the dedicated
-model-storage drive and verify a `pi` session survives an intentional `llama-router`
-restart without full reprocessing, per `context/roadmap.toml`'s existing task and the
-"What to try first" section of `research/framework-desktop-followups.md`.
+None. `tuning.slot-persistence` and the `tuning` goal were dropped on 2026-10-29, when
+spike-model-engines retired the `llama-router` it targeted; the repository is archived once
+ai-hosting's runbook lands.
