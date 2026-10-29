@@ -1,4 +1,7 @@
 #!/bin/bash
+# Superseded by spike-model-engines' llama.cpp guide:
+# https://github.com/JaimeStill/spike-model-engines/tree/main/docs/engines/llama.cpp
+#
 # Lists the router's registered models (GET /models), or loads/unloads one
 # (POST /models/load, /models/unload). Confirmed against
 # https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md -

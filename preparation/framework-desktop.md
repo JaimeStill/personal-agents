@@ -11,6 +11,10 @@ not a fixed hardware limit. The steps below get that configuration right before 
 [`setup/hosting-setup.md`](../setup/hosting-setup.md) — getting it wrong the first time
 took real troubleshooting, so the detail here is worth keeping even after it's working.
 
+This host now serves set A from spike-model-engines' `llama` container in ggml's Vulkan image,
+by its [llama.cpp guide](https://github.com/JaimeStill/spike-model-engines/tree/main/docs/engines/llama.cpp), in place of the `llama-router` service. The GTT
+steps below still apply. This repository is archived once ai-hosting's runbook lands.
+
 ## Steps
 
 1. **Enter BIOS (`F2` at boot) and set the GPU memory reservation to `Custom: 512MB`**,
@@ -65,11 +69,10 @@ took real troubleshooting, so the detail here is worth keeping even after it's w
 
 ## Also worth knowing
 
-- Since 2026-10-27 spike-model-engines' Strix sessions own this host: the router below is
-  stopped and disabled (`sudo systemctl enable --now llama-router` brings it back), `jaime` is
-  in the `docker` group with Docker enabled, and ufw routes ports 8080 and 8000 on
-  `tailscale0` to containers. Its llama.cpp guide, "Framework, in a container", lists each
-  step with its removal.
+- Since 2026-10-29 the host serves set A from spike-model-engines' `llama` container
+  (ggml's Vulkan image), by its [llama.cpp guide](https://github.com/JaimeStill/spike-model-engines/tree/main/docs/engines/llama.cpp); the
+  `llama-router` service the bullets below describe is retired. `jaime` is in the `docker`
+  group with Docker enabled, and ufw routes ports 8080 and 8000 on `tailscale0` to containers.
 
 - Backend: Vulkan, not ROCm: upstream llama.cpp's Vulkan x64 release, build b11529, in
   `/opt/llama.cpp/` per [`setup/hosting-setup.md`](../setup/hosting-setup.md#install).

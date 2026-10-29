@@ -1,4 +1,7 @@
 #!/bin/bash
+# Superseded by spike-model-engines' llama.cpp guide:
+# https://github.com/JaimeStill/spike-model-engines/tree/main/docs/engines/llama.cpp
+#
 # Dispatcher: routes `outpost <group> <verb> [args...]` to the script named
 # `outpost-<group>-<verb>` in this same directory, passing the remaining args
 # through. Add a new command by adding a new outpost-<group>-<verb> script

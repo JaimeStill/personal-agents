@@ -1,4 +1,7 @@
 #!/bin/bash
+# Superseded by spike-model-engines' llama.cpp guide:
+# https://github.com/JaimeStill/spike-model-engines/tree/main/docs/engines/llama.cpp
+#
 # Symlinks every outpost command in bin/ into ~/.local/bin, so `outpost` and
 # its subcommands are callable from anywhere, and removes the links of commands
 # that no longer exist. Re-run any time after pulling a change that adds,

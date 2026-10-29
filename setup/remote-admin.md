@@ -1,5 +1,7 @@
 # Remote administration
 
+> **Superseded** by spike-model-engines' [llama.cpp guide](https://github.com/JaimeStill/spike-model-engines/tree/main/docs/engines/llama.cpp).
+
 Previous: [The Pi agent harness](pi-harness.md)
 
 This doc covers managing the host from the remote day to day: terminal sessions, moving

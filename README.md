@@ -6,6 +6,10 @@ This repository documents running a self-hosted LLM on one machine and driving i
 the distro on both machines; steps specific to Omarchy are called out where they occur
 rather than assumed silently.
 
+The host now serves set A from spike-model-engines' `llama` container in ggml's Vulkan image,
+by its [llama.cpp guide](https://github.com/JaimeStill/spike-model-engines/tree/main/docs/engines/llama.cpp), in place of the `llama-router` service
+these docs describe. This repository is archived once ai-hosting's runbook lands.
+
 ## Host and remote
 
 Two roles recur throughout these docs:

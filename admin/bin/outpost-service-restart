@@ -1,4 +1,7 @@
 #!/bin/bash
+# Superseded by spike-model-engines' llama.cpp guide:
+# https://github.com/JaimeStill/spike-model-engines/tree/main/docs/engines/llama.cpp
+#
 # Restarts the llama-router service and shows its status. Whether this is
 # actually necessary after editing a profile (versus just unloading/reloading
 # the affected model through /llama) hasn't been confirmed — use this when in

@@ -1,5 +1,7 @@
 # Hosting setup
 
+> **Superseded** by spike-model-engines' [llama.cpp guide](https://github.com/JaimeStill/spike-model-engines/tree/main/docs/engines/llama.cpp).
+
 Next: [Networking](networking.md)
 
 This doc covers installing [llama.cpp](https://github.com/ggml-org/llama.cpp) on the host,
